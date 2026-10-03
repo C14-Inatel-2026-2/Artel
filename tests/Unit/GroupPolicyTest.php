@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Group;
 use App\Models\User;
 use App\Policies\GroupPolicy;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use PHPUnit\Framework\TestCase;
 
 class GroupPolicyTest extends TestCase
@@ -37,5 +38,38 @@ class GroupPolicyTest extends TestCase
         $canUpdate = $policy->update($user, $group);
 
         $this->assertFalse($canUpdate);
+    }
+
+    public function test_member_can_view_group(): void
+    {
+        $user = new User();
+        $user->id = 2;
+
+        $relationMock = $this->getMockBuilder(BelongsToMany::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['where', 'exists'])
+            ->getMock();
+
+        $relationMock->expects($this->once())
+            ->method('where')
+            ->with('user_id', $user->id)
+            ->willReturnSelf();
+
+        $relationMock->expects($this->once())
+            ->method('exists')
+            ->willReturn(true);
+
+        $groupMock = $this->createPartialMock(Group::class, ['members']);
+        $groupMock->user_id = 1;
+        
+        $groupMock->expects($this->once())
+            ->method('members')
+            ->willReturn($relationMock);
+
+        $policy = new GroupPolicy();
+
+        $canView = $policy->view($user, $groupMock);
+
+        $this->assertTrue($canView);
     }
 }
