@@ -72,4 +72,37 @@ class GroupPolicyTest extends TestCase
 
         $this->assertTrue($canView);
     }
+
+    public function test_non_member_cannot_view_group(): void
+    {
+        $user = new User();
+        $user->id = 2;
+
+        $relationMock = $this->getMockBuilder(BelongsToMany::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['where', 'exists'])
+            ->getMock();
+
+        $relationMock->expects($this->once())
+            ->method('where')
+            ->with('user_id', $user->id)
+            ->willReturnSelf();
+
+        $relationMock->expects($this->once())
+            ->method('exists')
+            ->willReturn(false);
+
+        $groupMock = $this->createPartialMock(Group::class, ['members']);
+        $groupMock->user_id = 1;
+        
+        $groupMock->expects($this->once())
+            ->method('members')
+            ->willReturn($relationMock);
+
+        $policy = new GroupPolicy();
+
+        $canView = $policy->view($user, $groupMock);
+
+        $this->assertFalse($canView);
+    }
 }
