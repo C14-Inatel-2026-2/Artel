@@ -45,19 +45,15 @@ class GroupPolicyTest extends TestCase
         $user = new User();
         $user->id = 2;
 
-        $relationMock = $this->getMockBuilder(BelongsToMany::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['where', 'exists'])
-            ->getMock();
-
-        $relationMock->expects($this->once())
-            ->method('where')
+        $relationMock = \Mockery::mock(BelongsToMany::class);
+        $relationMock->shouldReceive('where')
+            ->once()
             ->with('user_id', $user->id)
-            ->willReturnSelf();
+            ->andReturnSelf();
 
-        $relationMock->expects($this->once())
-            ->method('exists')
-            ->willReturn(true);
+        $relationMock->shouldReceive('exists')
+            ->once()
+            ->andReturn(true);
 
         $groupMock = $this->createPartialMock(Group::class, ['members']);
         $groupMock->user_id = 1;
@@ -78,19 +74,15 @@ class GroupPolicyTest extends TestCase
         $user = new User();
         $user->id = 2;
 
-        $relationMock = $this->getMockBuilder(BelongsToMany::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['where', 'exists'])
-            ->getMock();
-
-        $relationMock->expects($this->once())
-            ->method('where')
+        $relationMock = \Mockery::mock(BelongsToMany::class);
+        $relationMock->shouldReceive('where')
+            ->once()
             ->with('user_id', $user->id)
-            ->willReturnSelf();
+            ->andReturnSelf();
 
-        $relationMock->expects($this->once())
-            ->method('exists')
-            ->willReturn(false);
+        $relationMock->shouldReceive('exists')
+            ->once()
+            ->andReturn(false);
 
         $groupMock = $this->createPartialMock(Group::class, ['members']);
         $groupMock->user_id = 1;
