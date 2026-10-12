@@ -4,14 +4,18 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 ## Requisitos
 
-- PHP 8.2+
+- PHP 8.3+
+- Laravel 13.x
 - Composer
+- Node.js & npm
 
 ## Setup
 
 ```bash
 # 1. Instalar dependências
 composer install
+npm install
+npm run build
 
 # 2. Copiar arquivo de ambiente
 cp .env.example .env
