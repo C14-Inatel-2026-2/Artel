@@ -6,6 +6,10 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 - Docker
 - Docker Compose
+- PHP 8.3+
+- Laravel 13.x
+- Composer
+- Node.js & npm
 
 O PHP, Composer, Apache e SQLite são executados dentro do container.
 
@@ -17,6 +21,10 @@ O PHP, Composer, Apache e SQLite são executados dentro do container.
 docker compose build
 docker compose up -d
 ```
+# 1. Instalar dependências
+composer install
+npm install
+npm run build
 
 A aplicação estará disponível em [http://localhost:8000](http://localhost:8000).
 
