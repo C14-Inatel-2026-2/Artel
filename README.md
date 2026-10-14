@@ -4,32 +4,65 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 ## Requisitos
 
-- PHP 8.2+
+- Docker
+- Docker Compose
+- PHP 8.3+
+- Laravel 13.x
 - Composer
+- Node.js & npm
 
-## Setup
+O PHP, Composer, Apache e SQLite são executados dentro do container.
+
+## Executando com Docker
+
+### Build e inicialização
 
 ```bash
+docker compose build
+docker compose up -d
+```
 # 1. Instalar dependências
 composer install
-
-# 2. Copiar arquivo de ambiente
-cp .env.example .env
-
-# 3. Gerar chave da aplicação
-php artisan key:generate
-
-# 4. Rodar migrations
-php artisan migrate
-
-# 5. Subir o servidor de desenvolvimento
-php artisan serve
-```
+npm install
+npm run build
 
 A aplicação estará disponível em [http://localhost:8000](http://localhost:8000).
 
-## Testes
+### Verificar os containers
 
 ```bash
-php artisan test
+docker compose ps
 ```
+
+### Verificar as migrations
+
+```bash
+docker compose exec app php artisan migrate:status
+```
+
+### Testar a conexão com o banco
+
+```bash
+docker compose exec app php artisan tinker --execute="DB::connection()->getPdo(); echo 'Banco conectado';"
+```
+
+### Executar os testes
+
+```bash
+docker compose exec app php artisan test
+```
+
+### Visualizar os logs
+
+```bash
+docker compose logs -f app
+```
+
+## Testes
+
+Com Docker:
+
+```bash
+docker compose exec app php artisan test
+```
+

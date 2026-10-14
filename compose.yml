@@ -1,0 +1,28 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: artel-app
+        ports:
+            - "8000:80"
+        environment:
+            APP_ENV: local
+            APP_DEBUG: "true"
+            APP_URL: http://localhost:8000
+            DB_CONNECTION: sqlite
+            DB_DATABASE: /var/lib/artel/database.sqlite
+        volumes:
+            - artel_sqlite:/var/lib/artel
+        command: >
+            sh -c "
+              mkdir -p /var/lib/artel &&
+              touch /var/lib/artel/database.sqlite &&
+              chown -R www-data:www-data /var/lib/artel &&
+              php artisan migrate --force &&
+              exec apache2-foreground
+            "
+        restart: unless-stopped
+
+volumes:
+    artel_sqlite:
