@@ -46,6 +46,7 @@ validation:
 nav:
   - Visão geral: index.md
   - Instalação e execução: instalacao.md
+  - Como rodar o projeto / Comandos Úteis: comandos.md
   - Arquitetura: arquitetura.md
   - API: api.md
   - Testes: testes.md

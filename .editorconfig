@@ -16,3 +16,6 @@ indent_size = 2
 
 [{compose,docker-compose}.{yml,yaml}]
 indent_size = 4
+
+[Makefile]
+indent_style = tab
