@@ -42,6 +42,7 @@ Detalhes de cada endpoint estão em [API](api.md).
 ## Mapa da documentação
 
 - [Instalação e execução](instalacao.md)
+- [Como rodar o projeto / Comandos Úteis](comandos.md)
 - [Arquitetura](arquitetura.md)
 - [API](api.md)
 - [Testes](testes.md)
