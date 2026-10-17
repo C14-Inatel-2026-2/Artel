@@ -64,3 +64,7 @@ composer setup
 ```
 
 Ele executa `composer install`, copia `.env.example` para `.env` (se não existir), `php artisan key:generate`, `php artisan migrate --force`, `npm install --ignore-scripts` e `npm run build`. Por depender do npm, exige Node.js instalado.
+
+## Facilitador de linha de comando (Makefile)
+
+Para agilizar tarefas recorrentes de desenvolvimento (como executar o servidor, rodar migrações e testes), o projeto disponibiliza um `Makefile` na raiz. Consulte o guia completo em [Como rodar o projeto / Comandos Úteis](comandos.md).
