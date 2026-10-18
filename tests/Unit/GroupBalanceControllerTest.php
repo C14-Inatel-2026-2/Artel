@@ -26,7 +26,7 @@ class GroupBalanceControllerTest extends TestCase
             ]);
 
         $controller = new GroupBalanceController($mockService);
-        $group = new Group();
+        $group = new Group;
 
         // Act
         $response = $controller->index($group);
@@ -48,7 +48,7 @@ class GroupBalanceControllerTest extends TestCase
             ->willThrowException(new InvalidArgumentException('Grupo sem dados financeiros'));
 
         $controller = new GroupBalanceController($mockService);
-        $group = new Group();
+        $group = new Group;
 
         // Assert & Act
         $this->expectException(InvalidArgumentException::class);

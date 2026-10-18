@@ -32,6 +32,17 @@ pipeline {
             }
         }
 
+        // Verifica formatação (Laravel Pint) e vulnerabilidades de dependências (Composer Audit).
+        // Qualquer exit code != 0 falha o stage e impede o avanço da pipeline.
+        stage('Quality') {
+            steps {
+                sh '''
+                    ./vendor/bin/pint --test
+                    composer audit --no-interaction
+                '''
+            }
+        }
+
         // Falha nos testes (exit code != 0 do PHPUnit) falha o stage e o Jenkins
         // pula os stages seguintes. Os relatórios são publicados mesmo em caso de falha.
         stage('Testes e Cobertura') {

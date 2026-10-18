@@ -28,6 +28,8 @@ Os atalhos padronizam tarefas de instalação, execução de servidor, migraçõ
 | `make migrate` | `php artisan migrate` | Aplica migrações pendentes no banco SQLite. |
 | `make migrate-status` | `php artisan migrate:status` | Exibe o status de cada migration sem alterar o banco. |
 | `make lint` | `php vendor/bin/pint --test` | Analisa a formatação do código com Laravel Pint (somente leitura). |
+| `make lint-fix` | `php vendor/bin/pint` | Corrige automaticamente a formatação do código com Laravel Pint. |
+| `make audit` | `composer audit` | Verifica vulnerabilidades de segurança nas dependências PHP. |
 | `make docs-serve` | `mkdocs serve -a ...:8001` | Inicia o servidor local da documentação MkDocs. |
 | `make docs-build` | `mkdocs build --strict` | Compila a documentação estática com validação estrita. |
 
@@ -116,12 +118,36 @@ Exibe uma tabela detalhada com o status de cada migração (se já foi executada
 
 ### `lint`
 
-Dispara o **Laravel Pint** em modo de checagem (`--test`). Essa verificação não altera nenhum arquivo no repositório; apenas aponta violações de estilo de código segundo as regras do Laravel.
+Dispara o **Laravel Pint** em modo de checagem (`--test`). Essa verificação não altera nenhum arquivo no repositório; apenas aponta violações de estilo de código segundo as regras do preset `laravel` configurado em `pint.json`.
 
 - **Pré-requisitos:** Dependências instaladas (`vendor/bin/pint`).
 - **Exemplo de uso:**
   ```bash
   make lint
+  ```
+
+---
+
+### `lint-fix`
+
+Executa o **Laravel Pint** aplicando automaticamente as correções de formatação nos arquivos PHP do projeto conforme o preset `laravel` definido em `pint.json`.
+
+- **Pré-requisitos:** Dependências instaladas (`vendor/bin/pint`).
+- **Exemplo de uso:**
+  ```bash
+  make lint-fix
+  ```
+
+---
+
+### `audit`
+
+Executa o **Composer Audit** (`composer audit`) para inspecionar o `composer.lock` em busca de vulnerabilidades de segurança conhecidas (CVEs / Security Advisories) nas dependências instaladas.
+
+- **Pré-requisitos:** Composer instalado e arquivo `composer.lock` presente.
+- **Exemplo de uso:**
+  ```bash
+  make audit
   ```
 
 ---
