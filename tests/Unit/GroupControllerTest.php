@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Http\Controllers\GroupController;
 use App\Models\Group;
+use Tests\TestCase;
 
 class GroupControllerTest extends TestCase
 {
@@ -13,7 +13,7 @@ class GroupControllerTest extends TestCase
         $groupMock = $this->createMock(Group::class);
         $groupMock->expects($this->once())->method('delete');
 
-        $controller = new GroupController();
+        $controller = new GroupController;
 
         $response = $controller->destroy($groupMock);
 
@@ -26,12 +26,11 @@ class GroupControllerTest extends TestCase
         $groupMock = $this->createMock(Group::class);
         $groupMock->expects($this->once())->method('delete')->willThrowException(new \RuntimeException('Erro no banco de dados ao excluir grupo'));
 
-        $controller = new GroupController();
+        $controller = new GroupController;
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Erro no banco de dados ao excluir grupo');
 
         $controller->destroy($groupMock);
     }
-
 }

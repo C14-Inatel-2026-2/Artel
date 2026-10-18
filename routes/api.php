@@ -37,4 +37,3 @@ Route::prefix('expenses')->name('expenses.')->group(function () {
     Route::get('/{expense}', [ExpenseController::class, 'show'])->name('show');
     Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
 });
-
