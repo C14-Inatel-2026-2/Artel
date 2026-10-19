@@ -14,7 +14,7 @@ class AddGroupMemberRequestTest extends TestCase
     public function test_add_group_member_rules_contain_conditional_fields(): void
     {
         // Arrange
-        $request = new AddGroupMemberRequest();
+        $request = new AddGroupMemberRequest;
 
         // Act
         $rules = $request->rules();
@@ -32,7 +32,7 @@ class AddGroupMemberRequestTest extends TestCase
     public function test_add_group_member_fails_when_no_identifier_provided(): void
     {
         // Arrange
-        $request = new AddGroupMemberRequest();
+        $request = new AddGroupMemberRequest;
         $payload = []; // Nenhum dado enviado
 
         // Act
