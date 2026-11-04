@@ -48,3 +48,32 @@ docker compose down
   - `jenkins_home`: Volume persistente do Docker para preservar plugins, configurações, jobs e histórico de builds.
   - `/var/run/docker.sock`: Permite que os pipelines utilizem o daemon Docker do host para executar passos em containers.
 - **Usuário:** `root` (garante permissões de leitura/escrita no socket do Docker e no volume).
+
+---
+
+## Pipeline (`Jenkinsfile` na raiz)
+
+Fluxo integrado:
+
+1. **Build** — `composer install`, `.env`, `key:generate`
+2. **Quality** — Laravel Pint (`--test`) + Composer Audit
+3. **Testes e Cobertura** — PHPUnit + JUnit/Cobertura
+4. **Package** — caches de produção + artefato `.tar.gz` (todas as branches)
+5. **Deploy e Smoke Test** — **somente `main`**: `fly deploy` no app `artel-c14` + `GET https://artel-c14.fly.dev/up` (HTTP 200)
+
+### Credencial Fly (obrigatória para Deploy na main)
+
+1. Gere um token de deploy:
+
+```bash
+fly tokens create deploy -x 999999h -a artel-c14
+```
+
+2. No Jenkins: **Manage Jenkins → Credentials → Add**  
+   - Kind: **Secret text**  
+   - ID: **`fly-api-token`** (exato)  
+   - Secret: cole o token
+
+3. O agente precisa de `curl` (e baixa o `flyctl` no stage se ainda não estiver instalado).
+
+Sem a credencial, builds da `main` falham no último stage; builds de outras branches seguem até o Package.

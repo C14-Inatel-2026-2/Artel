@@ -10,7 +10,7 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 > **Atenção:** a API pública ainda **não tem autenticação**. Não use dados reais.
 >
-> Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina — a CI (Jenkins) continua independente. Redeploy, pausa e religar: [docs/instalacao.md](docs/instalacao.md#deploy-no-flyio).
+> Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Builds da **`main` no Jenkins** voltam a publicar no Fly (Deploy e Smoke Test). Redeploy, pausa e credencial: [docs/instalacao.md](docs/instalacao.md#deploy-no-flyio).
 
 ## Requisitos
 

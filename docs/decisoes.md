@@ -28,4 +28,4 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | P4 | **Escopo de interface**: apenas API ou API com frontend | Existe apenas a view `welcome` do skeleton Laravel. |
 | P5 | **Tipos de divisão além da igualitária** | Não implementado. |
 | P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
-| P7 | **Integração contínua, cobertura de testes e deploy automatizado** | CI parcial no `Jenkinsfile` (build, quality, testes, empacotamento). Host de demo no Fly.io (D11). Falta encadear publicação automática no pipeline (#28). |
+| P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`, credencial `fly-api-token`). Host de demo: D11. Validar evidências no Jenkins da equipe (#29). |
