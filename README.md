@@ -6,7 +6,7 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 - Docker
 - Docker Compose
-- PHP 8.3+
+- PHP 8.4+
 - Laravel 13.x
 - Composer
 - Node.js & npm

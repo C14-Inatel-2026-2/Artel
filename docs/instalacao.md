@@ -4,13 +4,13 @@
 
 | Ferramenta | Observação |
 |---|---|
-| PHP 8.3+ | Exigido por `composer.json` (`"php": "^8.3"`). Extensão `pdo_sqlite` habilitada. |
+| PHP 8.4+ | Exigido por `composer.json` (`"php": "^8.4"`) e pela imagem Docker (`php:8.4-apache`). Extensão `pdo_sqlite` habilitada. |
 | Composer | Gerenciador de dependências PHP. |
 | Node.js + npm | Opcional para a API. Necessário apenas para compilar os assets do skeleton Laravel (Vite). |
 | Python 3 | Opcional. Necessário apenas para a documentação (veja [Documentação (MkDocs)](documentacao.md)). |
 
-!!! note "Divergência no README"
-    O `README.md` cita "PHP 8.2+", mas o `composer.json` exige `^8.3`. Considere **PHP 8.3** como requisito mínimo.
+!!! note "Mínimo PHP 8.4"
+    O requisito mínimo é **PHP 8.4**. O `composer.lock` atual não instala em 8.3 (dependências Symfony exigem ≥ 8.4.1). A decisão está registrada em [Decisões arquiteturais](decisoes.md#confirmadas).
 
 ## Configuração do ambiente
 

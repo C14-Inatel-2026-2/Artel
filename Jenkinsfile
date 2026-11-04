@@ -1,6 +1,6 @@
-// Pipeline de CI/CD do Artel (Laravel 13 / PHP 8.3).
+// Pipeline de CI/CD do Artel (Laravel 13 / PHP 8.4).
 // Plugins usados: Pipeline, Git, JUnit e Coverage.
-// Pré-requisitos do agente: PHP 8.3 (pdo_sqlite, mbstring, dom, xml), Composer
+// Pré-requisitos do agente: PHP 8.4 (pdo_sqlite, mbstring, dom, xml), Composer
 // e um driver de cobertura (PCOV ou Xdebug) para o stage de Testes e Cobertura.
 pipeline {
     agent any

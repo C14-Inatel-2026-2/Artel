@@ -6,7 +6,7 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 
 | # | Decisão | Evidência no repositório |
 |---|---|---|
-| D1 | **PHP 8.3 + Laravel 13** como stack da aplicação | `composer.json` |
+| D1 | **PHP 8.4 + Laravel 13** como stack da aplicação | `composer.json` (`"php": "^8.4"`), `Dockerfile` (`php:8.4-apache`). O `composer.lock` exige PHP ≥ 8.4.1 (ex.: `symfony/http-foundation` 8.x); por isso o mínimo deixou de ser 8.3. |
 | D2 | **SQLite** como banco de dados padrão (em arquivo no desenvolvimento e em memória nos testes) | `.env.example`, `config/database.php`, `phpunit.xml` |
 | D3 | **API REST com respostas JSON** sob `/api`, com exceções renderizadas como JSON para `api/*` | `routes/api.php`, `bootstrap/app.php` |
 | D4 | **Validação em Form Requests**, com mensagens em português | `app/Http/Requests/` |

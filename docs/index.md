@@ -30,7 +30,7 @@ Detalhes de cada endpoint estão em [API](api.md).
 
 | Tecnologia | Versão declarada | Fonte |
 |---|---|---|
-| PHP | `^8.3` | `composer.json` |
+| PHP | `^8.4` | `composer.json`, `Dockerfile` |
 | Laravel | `^13.17` | `composer.json` |
 | SQLite | conexão padrão | `.env.example`, `config/database.php` |
 | PHPUnit | `^12.5.12` | `composer.json` (dev) |
