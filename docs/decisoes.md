@@ -6,7 +6,7 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 
 | # | Decisão | Evidência no repositório |
 |---|---|---|
-| D1 | **PHP 8.3 + Laravel 13** como stack da aplicação | `composer.json` |
+| D1 | **PHP 8.4 + Laravel 13** como stack da aplicação | `composer.json` (`"php": "^8.4"`), `Dockerfile` (`php:8.4-apache`). O `composer.lock` exige PHP ≥ 8.4.1 (ex.: `symfony/http-foundation` 8.x); por isso o mínimo deixou de ser 8.3. |
 | D2 | **SQLite** como banco de dados padrão (em arquivo no desenvolvimento e em memória nos testes) | `.env.example`, `config/database.php`, `phpunit.xml` |
 | D3 | **API REST com respostas JSON** sob `/api`, com exceções renderizadas como JSON para `api/*` | `routes/api.php`, `bootstrap/app.php` |
 | D4 | **Validação em Form Requests**, com mensagens em português | `app/Http/Requests/` |
@@ -16,15 +16,16 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D8 | **O criador do grupo é participante automático e não pode ser removido** | `GroupController::store`, `GroupMemberController::destroy` |
 | D9 | **Testes com PHPUnit + Mockery** | `composer.json`, `phpunit.xml`, `tests/` |
 | D10 | **Documentação técnica em MkDocs + Material**, com dependências Python isoladas em `requirements-docs.txt` | `mkdocs.yml`, `requirements-docs.txt` |
+| D11 | **Demo hospedada no Fly.io** (Docker Apache + SQLite em volume), app `artel-c14` | `fly.toml`, `docker/entrypoint.sh`, `Dockerfile`. URL: `https://artel-c14.fly.dev`. |
 
 ## Pendentes
 
 | # | Questão | Situação atual |
 |---|---|---|
-| P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. |
+| P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. **Urgente** enquanto a demo pública estiver no ar. |
 | P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. |
 | P3 | **Fluxo de cadastro/login**: rotas web com sessão ou endpoints de API | As rotas atuais estão no grupo `web` e redirecionam. |
 | P4 | **Escopo de interface**: apenas API ou API com frontend | Existe apenas a view `welcome` do skeleton Laravel. |
 | P5 | **Tipos de divisão além da igualitária** | Não implementado. |
 | P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
-| P7 | **Integração contínua, cobertura de testes e deploy** | Não configurados no repositório. |
+| P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`, credencial `fly-api-token`). Host de demo: D11. Validar evidências no Jenkins da equipe (#29). |

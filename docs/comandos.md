@@ -11,7 +11,7 @@ Os atalhos padronizam tarefas de instalação, execução de servidor, migraçõ
 | Ferramenta | Finalidade | Observações |
 |---|---|---|
 | **GNU Make** | Executor dos comandos | Nativo em Linux e macOS. No Windows, pode ser usado via WSL, Git Bash ou instalado com `choco install make` / `winget install GnuWin32.Make`. |
-| **PHP 8.3+** | Execução da aplicação | Extensão `pdo_sqlite` habilitada. |
+| **PHP 8.4+** | Execução da aplicação | Extensão `pdo_sqlite` habilitada. |
 | **Composer** | Gerenciador de dependências PHP | Necessário para instalação e execução dos scripts de teste. |
 | **Python 3 (`.venv`)** | Documentação MkDocs | Opcional. Apenas para os comandos `docs-serve` e `docs-build` (veja [Documentação](documentacao.md)). |
 
@@ -186,7 +186,7 @@ O `Makefile` utiliza atribuições condicionais (`?=`), permitindo ajustar camin
 
 ```bash
 # Usar binários específicos de PHP ou Composer
-make test PHP=/usr/bin/php8.3 COMPOSER=/usr/local/bin/composer
+make test PHP=/usr/bin/php8.4 COMPOSER=/usr/local/bin/composer
 
 # Executar o servidor Laravel em outro endereço e porta
 make serve HOST=0.0.0.0 PORT=9000
