@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Build, Quality & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, sqlite3, pdo_sqlite, bcmath, zip, pcov, dom, xml, curl
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ runner.os }}-php8.4-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php8.4-
+
+      - name: Build
+        run: |
+          composer validate --no-check-publish
+          composer install --prefer-dist --no-progress --no-interaction
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Quality (Pint + Audit)
+        run: |
+          ./vendor/bin/pint --test
+          composer audit --no-interaction
+
+      - name: Testes e Cobertura
+        run: |
+          mkdir -p build/reports
+          php artisan config:clear --ansi
+          php -d pcov.enabled=1 vendor/bin/phpunit \
+            --log-junit build/reports/junit.xml \
+            --coverage-clover build/reports/clover.xml \
+            --coverage-text
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy e Smoke Test
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        id: deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::warning::Secret FLY_API_TOKEN não configurado — pulando deploy. Cadastre em Settings → Secrets → Actions."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          flyctl deploy --remote-only --app artel-c14
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test /up
+        if: steps.deploy.outputs.skipped != 'true'
+        run: |
+          set -eu
+          URL="https://artel-c14.fly.dev/up"
+          ok=0
+          for i in $(seq 1 18); do
+            code="$(curl -sS -o /tmp/artel-up.body -w '%{http_code}' "$URL" || true)"
+            echo "tentativa ${i}: HTTP ${code}"
+            if [ "$code" = "200" ]; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$ok" != "1" ]; then
+            echo "Smoke test falhou: ${URL} não retornou HTTP 200"
+            exit 1
+          fi
+          echo "Smoke test OK (${URL})"
