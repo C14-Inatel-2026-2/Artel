@@ -51,7 +51,19 @@ docker compose down
 
 ---
 
-## Pipeline (`Jenkinsfile` na raiz)
+## GitHub Actions (check verde no GitHub)
+
+Além do Jenkins local, o repositório tem [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml):
+
+- Em **todo push/PR** para `main` ou `dev`: Build → Quality → Testes (status no commit)
+- Em **push na `main`**: Deploy Fly + smoke `/up` (precisa do secret `FLY_API_TOKEN` em *Settings → Secrets and variables → Actions*)
+
+```bash
+fly tokens create deploy -x 999999h -a artel-c14
+# cole o valor em FLY_API_TOKEN no GitHub
+```
+
+## Pipeline Jenkins (`Jenkinsfile` na raiz)
 
 Fluxo integrado:
 
