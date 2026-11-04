@@ -2,6 +2,14 @@
 
 Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenharia de Software (Inatel).
 
+## Demo
+
+- URL: [https://artel-c14.fly.dev](https://artel-c14.fly.dev)
+- Health: `GET /up`
+- API (ex.): `GET /api/groups`
+
+> **Atenção:** a API pública ainda **não tem autenticação**. Não use dados reais. Detalhes e redeploy: [docs/instalacao.md](docs/instalacao.md#deploy-no-flyio).
+
 ## Requisitos
 
 - Docker
@@ -21,10 +29,6 @@ O PHP, Composer, Apache e SQLite são executados dentro do container.
 docker compose build
 docker compose up -d
 ```
-# 1. Instalar dependências
-composer install
-npm install
-npm run build
 
 A aplicação estará disponível em [http://localhost:8000](http://localhost:8000).
 

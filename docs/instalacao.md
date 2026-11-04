@@ -68,3 +68,34 @@ Ele executa `composer install`, copia `.env.example` para `.env` (se não existi
 ## Facilitador de linha de comando (Makefile)
 
 Para agilizar tarefas recorrentes de desenvolvimento (como executar o servidor, rodar migrações e testes), o projeto disponibiliza um `Makefile` na raiz. Consulte o guia completo em [Como rodar o projeto / Comandos Úteis](comandos.md).
+
+## Deploy no Fly.io
+
+A API de demonstração está publicada em **https://artel-c14.fly.dev** (região `gru`). Health check: `GET /up`. Exemplo de API: `GET /api/groups`.
+
+!!! warning "API sem autenticação"
+    Em produção pública a API **ainda não exige login**. Controllers usam `User::first()` quando não há usuário autenticado (veja [Decisões — P1](decisoes.md#pendentes)). Não use dados reais nesse ambiente.
+
+### Pré-requisitos
+
+- Conta no [Fly.io](https://fly.io) e CLI `flyctl` (`curl -L https://fly.io/install.sh | sh`)
+- Login: `fly auth login`
+- App e volume já criados para este projeto: app `artel-c14`, volume `artel_data` montado em `/data`
+
+### Redeploy
+
+Na raiz do repositório (com `fly.toml`):
+
+```bash
+fly deploy --app artel-c14
+```
+
+Secrets necessários (já configurados no app; regenerar só se necessário):
+
+```bash
+fly secrets set APP_KEY="$(php artisan key:generate --show)" APP_URL="https://artel-c14.fly.dev" --app artel-c14
+```
+
+O container sobe com [`docker/entrypoint.sh`](../docker/entrypoint.sh): ajusta a porta (`PORT=8080`), garante o SQLite em `/data/database.sqlite`, roda `php artisan migrate --force` e inicia o Apache.
+
+Configuração versionada: [`fly.toml`](../fly.toml), [`Dockerfile`](../Dockerfile). Compose local usa o mesmo entrypoint e o volume em `/data` (porta host `8000` → container `8080`).

@@ -16,15 +16,16 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D8 | **O criador do grupo é participante automático e não pode ser removido** | `GroupController::store`, `GroupMemberController::destroy` |
 | D9 | **Testes com PHPUnit + Mockery** | `composer.json`, `phpunit.xml`, `tests/` |
 | D10 | **Documentação técnica em MkDocs + Material**, com dependências Python isoladas em `requirements-docs.txt` | `mkdocs.yml`, `requirements-docs.txt` |
+| D11 | **Demo hospedada no Fly.io** (Docker Apache + SQLite em volume), app `artel-c14` | `fly.toml`, `docker/entrypoint.sh`, `Dockerfile`. URL: `https://artel-c14.fly.dev`. |
 
 ## Pendentes
 
 | # | Questão | Situação atual |
 |---|---|---|
-| P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. |
+| P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. **Urgente** enquanto a demo pública estiver no ar. |
 | P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. |
 | P3 | **Fluxo de cadastro/login**: rotas web com sessão ou endpoints de API | As rotas atuais estão no grupo `web` e redirecionam. |
 | P4 | **Escopo de interface**: apenas API ou API com frontend | Existe apenas a view `welcome` do skeleton Laravel. |
 | P5 | **Tipos de divisão além da igualitária** | Não implementado. |
 | P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
-| P7 | **Integração contínua, cobertura de testes e deploy** | Não configurados no repositório. |
+| P7 | **Integração contínua, cobertura de testes e deploy automatizado** | CI parcial no `Jenkinsfile` (build, quality, testes, empacotamento). Host de demo no Fly.io (D11). Falta encadear publicação automática no pipeline (#28). |
