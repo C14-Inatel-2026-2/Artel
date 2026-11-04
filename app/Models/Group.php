@@ -13,6 +13,8 @@ class Group extends Model
 
     /**
      * Dono do grupo.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function owner(): BelongsTo
     {
@@ -21,6 +23,8 @@ class Group extends Model
 
     /**
      * Membros do grupo (tabela pivô group_members).
+     *
+     * @return BelongsToMany<User, $this>
      */
     public function members(): BelongsToMany
     {
@@ -29,6 +33,8 @@ class Group extends Model
 
     /**
      * Despesas do grupo.
+     *
+     * @return HasMany<Expense, $this>
      */
     public function expenses(): HasMany
     {
