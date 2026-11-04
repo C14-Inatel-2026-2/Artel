@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GroupBalanceController;
 use App\Http\Controllers\GroupController;
@@ -14,6 +15,16 @@ use Illuminate\Support\Facades\Route;
 | Rotas da API REST do Artel.
 |
 */
+
+Route::prefix('auth')->name('auth.')->group(function () {
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::get('/me', [AuthController::class, 'me'])->name('me');
+    });
+});
 
 Route::prefix('groups')->name('groups.')->group(function () {
     Route::get('/', [GroupController::class, 'index'])->name('index');
