@@ -99,3 +99,23 @@ fly secrets set APP_KEY="$(php artisan key:generate --show)" APP_URL="https://ar
 O container sobe com [`docker/entrypoint.sh`](../docker/entrypoint.sh): ajusta a porta (`PORT=8080`), garante o SQLite em `/data/database.sqlite`, roda `php artisan migrate --force` e inicia o Apache.
 
 Configuração versionada: [`fly.toml`](../fly.toml), [`Dockerfile`](../Dockerfile). Compose local usa o mesmo entrypoint e o volume em `/data` (porta host `8000` → container `8080`).
+
+### Pausar para não gastar (entre demos)
+
+O Jenkins **não publica no Fly** (só build/quality/testes/empacote). Dá para desligar o host sem afetar a pipeline de CI.
+
+Para zerar custo de máquina (CPU/RAM):
+
+```bash
+fly scale count 0 --app artel-c14 --yes
+```
+
+A URL `https://artel-c14.fly.dev` fica indisponível até religar. O **volume** `artel_data` (1 GB) continua existindo e pode gerar um custo mínimo de armazenamento (~US$ 0,15/mês). Para eliminar esse custo também, apague o volume ou o app (`fly apps destroy artel-c14`) — isso remove o SQLite da demo.
+
+Para religar antes da apresentação:
+
+```bash
+fly deploy --app artel-c14
+```
+
+Confirme com `fly status --app artel-c14` e `curl -I https://artel-c14.fly.dev/up`.
