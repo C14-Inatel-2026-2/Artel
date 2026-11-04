@@ -31,18 +31,15 @@ pip install -r requirements-docs.txt
 ## Servidor local
 
 ```bash
-mkdocs serve
+make docs-serve
 ```
 
-O site fica disponível em `http://127.0.0.1:8000` e recarrega ao salvar os arquivos.
-
-!!! tip "Conflito de porta"
-    O `php artisan serve` também usa a porta 8000 por padrão. Para executar os dois ao mesmo tempo, use outra porta para a documentação: `mkdocs serve -a 127.0.0.1:8001`.
+O site fica disponível em `http://127.0.0.1:8001` (porta diferente da do `php artisan serve`) e recarrega ao salvar os arquivos.
 
 ## Build
 
 ```bash
-mkdocs build --strict
+make docs-build
 ```
 
 Gera o site estático em `site/`. Com `--strict`, avisos como links quebrados, âncoras inexistentes ou páginas fora da navegação fazem o build falhar.

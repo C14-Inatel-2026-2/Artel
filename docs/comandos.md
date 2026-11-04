@@ -194,12 +194,6 @@ make serve HOST=0.0.0.0 PORT=9000
 
 ---
 
-## Próximos passos e integração com Docker
+## Docker
 
-Atualmente, o ambiente Docker do Artel está em desenvolvimento e padronização. Uma vez finalizada e estabilizada a infraestrutura de containers, os seguintes atalhos poderão ser adicionados ao facilitador:
-
-- `make docker-up`: Inicialização dos containers em background (`docker compose up -d`).
-- `make docker-down`: Encerramento dos containers (`docker compose down`).
-- `make docker-test`: Execução dos testes automatizados dentro do container `app`.
-- `make docker-migrate`: Execução de migrações dentro do container da aplicação.
-- `make docker-bash`: Abertura de shell interativo no container da aplicação.
+O `Makefile` cobre apenas o ambiente local. Para os comandos do Docker Compose, veja [Instalação e execução — Docker](instalacao.md#docker).
