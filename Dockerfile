@@ -1,6 +1,7 @@
 FROM php:8.4-apache
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+ENV PORT=8080
 
 RUN apt-get update \
     && apt-get install -y \
@@ -43,8 +44,9 @@ RUN composer install \
         bootstrap/cache \
     && chown -R www-data:www-data \
         storage \
-        bootstrap/cache
+        bootstrap/cache \
+    && chmod +x docker/entrypoint.sh
 
-EXPOSE 80
+EXPOSE 8080
 
-CMD ["apache2-foreground"]
+ENTRYPOINT ["docker/entrypoint.sh"]
