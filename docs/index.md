@@ -31,12 +31,12 @@ Detalhes de cada endpoint estão em [API](api.md).
 | Tecnologia | Versão declarada | Fonte |
 |---|---|---|
 | PHP | `^8.4` | `composer.json`, `Dockerfile` |
-| Laravel | `^13.17` | `composer.json` |
+| Laravel | `^13.0` | `composer.json` |
 | SQLite | conexão padrão | `.env.example`, `config/database.php` |
 | PHPUnit | `^12.5.12` | `composer.json` (dev) |
 | Mockery | `^1.6` | `composer.json` (dev) |
 | Laravel Pint | `^1.27` | `composer.json` (dev) |
-| Vite / Tailwind CSS | `^8.0.0` / `^4.0.0` | `package.json` (assets do skeleton Laravel) |
+| Vite / Tailwind CSS | `^8.0.0` / `^4.0.0` | `package.json` (interface web em Blade, ainda não implementada) |
 | MkDocs + Material | ver `requirements-docs.txt` | Documentação |
 
 ## Mapa da documentação
@@ -46,5 +46,6 @@ Detalhes de cada endpoint estão em [API](api.md).
 - [Arquitetura](arquitetura.md)
 - [API](api.md)
 - [Testes](testes.md)
+- [CI/CD e deploy](ci-cd.md)
 - [Decisões arquiteturais](decisoes.md)
 - [Documentação (MkDocs)](documentacao.md)

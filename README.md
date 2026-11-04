@@ -10,65 +10,56 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 > **Atenção:** a API pública ainda **não tem autenticação**. Não use dados reais.
 >
-> Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Builds da **`main` no Jenkins** voltam a publicar no Fly (Deploy e Smoke Test). Redeploy, pausa e credencial: [docs/instalacao.md](docs/instalacao.md#deploy-no-flyio).
-
-## Requisitos
-
-- Docker
-- Docker Compose
-- PHP 8.4+
-- Laravel 13.x
-- Composer
-- Node.js & npm
-
-O PHP, Composer, Apache e SQLite são executados dentro do container.
+> Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Um novo build da `main` no Jenkins volta a publicar no Fly. Veja [CI/CD e deploy](docs/ci-cd.md).
 
 ## Executando com Docker
 
-### Build e inicialização
+Requisitos: Docker e Docker Compose. PHP, Composer, Apache e SQLite rodam dentro do container.
 
 ```bash
-docker compose build
-docker compose up -d
+docker compose up -d --build
 ```
 
 A aplicação estará disponível em [http://localhost:8000](http://localhost:8000).
 
-### Verificar os containers
-
 ```bash
-docker compose ps
+docker compose ps                                     # status dos containers
+docker compose exec app php artisan migrate:status    # migrations
+docker compose logs -f app                            # logs
+docker compose down                                   # parar
 ```
 
-### Verificar as migrations
+## Executando localmente
+
+Requisitos: PHP 8.4+ (`pdo_sqlite`), Composer e, para a interface web, Node.js + npm.
 
 ```bash
-docker compose exec app php artisan migrate:status
+composer setup   # dependências, .env, chave, migrations e build dos assets
+make serve       # http://127.0.0.1:8000
 ```
 
-### Testar a conexão com o banco
+## Testes e qualidade
 
 ```bash
-docker compose exec app php artisan tinker --execute="DB::connection()->getPdo(); echo 'Banco conectado';"
+make test    # PHPUnit
+make lint    # Laravel Pint (somente leitura)
+make audit   # vulnerabilidades nas dependências
 ```
 
-### Executar os testes
+A imagem Docker é de produção (sem dependências de desenvolvimento), então os testes rodam localmente ou na pipeline.
 
-```bash
-docker compose exec app php artisan test
-```
+## CI/CD
 
-### Visualizar os logs
+A pipeline roda no Jenkins (`Jenkinsfile`): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Deploy e Smoke Test** no Fly.io. O servidor Jenkins local está em [`ci/jenkins/`](ci/jenkins/README.md).
 
-```bash
-docker compose logs -f app
-```
+## Documentação
 
-## Testes
+A documentação técnica fica em [`docs/`](docs/index.md) (MkDocs):
 
-Com Docker:
-
-```bash
-docker compose exec app php artisan test
-```
-
+- [Instalação e execução](docs/instalacao.md)
+- [Comandos úteis (Makefile)](docs/comandos.md)
+- [Arquitetura](docs/arquitetura.md)
+- [API](docs/api.md)
+- [Testes](docs/testes.md)
+- [CI/CD e deploy](docs/ci-cd.md)
+- [Decisões arquiteturais](docs/decisoes.md)

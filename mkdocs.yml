@@ -50,5 +50,6 @@ nav:
   - Arquitetura: arquitetura.md
   - API: api.md
   - Testes: testes.md
+  - CI/CD e deploy: ci-cd.md
   - Decisões arquiteturais: decisoes.md
   - Documentação (MkDocs): documentacao.md
