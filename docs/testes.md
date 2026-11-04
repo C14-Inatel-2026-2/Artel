@@ -35,21 +35,26 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 |---|---|
 | `Unit/AddGroupMemberRequestTest.php` | Regras de `AddGroupMemberRequest` e falha quando nenhum identificador é enviado |
 | `Unit/ExpenseControllerTest.php` | `store` com `ExpenseService` mockado: 201 em sucesso e 422 em `InvalidArgumentException` |
-| `Unit/ExpenseServiceTest.php` | Regras de `StoreExpenseRequest` e exceção ao criar despesa em grupo sem participantes |
+| `Unit/ExpenseServiceTest.php` | Exceção ao criar despesa em grupo sem participantes |
 | `Unit/GroupBalanceControllerTest.php` | `index` com service mockado: retorno 200 e propagação de exceção |
 | `Unit/GroupControllerTest.php` | `destroy`: resposta de sucesso e propagação de exceção |
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
+| `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias e valor mínimo de `StoreExpenseRequest` |
 | `Unit/StoreGroupRequestTest.php` | Regras de `StoreGroupRequest` e falha com nome curto |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
 
-Última execução local registrada para esta documentação: **16 testes, 41 asserções, todos passando**.
+## Cobertura
+
+As pipelines (veja [CI/CD e deploy](ci-cd.md)) geram cobertura com **PCOV**. Localmente, com PCOV ou Xdebug instalado:
+
+```bash
+php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
+```
 
 ## Limitações conhecidas
 
 - **Quase todos os testes são unitários com mocks.** Não há testes de feature que exercitem os endpoints da API via HTTP.
 - **Regras centrais sem teste:** a divisão em centavos (`createExpense`) e o cálculo de saldo (`calculateBalance`) não têm testes com banco de dados.
 - **`ExampleTest`** do skeleton Laravel ainda está presente nas duas suítes.
-- **Organização:** `ExpenseServiceTest.php` contém um teste de `StoreExpenseRequest`.
-- **Cobertura:** não há relatório de cobertura configurado. A geração exige um driver (Xdebug ou PCOV), e o projeto não define um.
 - **Autorização:** `GroupPolicyTest` testa a policy isoladamente, mas a policy não é aplicada nas rotas (veja [Visão geral](index.md#limitacoes-atuais)).
