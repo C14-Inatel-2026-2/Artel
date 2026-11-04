@@ -100,6 +100,10 @@ O container sobe com [`docker/entrypoint.sh`](../docker/entrypoint.sh): ajusta a
 
 Configuração versionada: [`fly.toml`](../fly.toml), [`Dockerfile`](../Dockerfile). Compose local usa o mesmo entrypoint e o volume em `/data` (porta host `8000` → container `8080`).
 
+### GitHub Actions (status no commit)
+
+Cada push/PR em `main` ou `dev` dispara [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Build, Pint, Audit, testes) e aparece o check no GitHub. Push na `main` também tenta Deploy no Fly se o secret **`FLY_API_TOKEN`** estiver cadastrado.
+
 ### Pipeline Jenkins (Deploy e Smoke Test)
 
 Na `main`, após Build → Quality → Testes → Package, o stage **Deploy e Smoke Test** publica no Fly (`fly deploy`) e valida `GET /up` (issue [#28](https://github.com/C14-Inatel-2026-2/Artel/issues/28)).
