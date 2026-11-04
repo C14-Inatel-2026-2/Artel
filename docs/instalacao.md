@@ -100,9 +100,23 @@ O container sobe com [`docker/entrypoint.sh`](../docker/entrypoint.sh): ajusta a
 
 Configuração versionada: [`fly.toml`](../fly.toml), [`Dockerfile`](../Dockerfile). Compose local usa o mesmo entrypoint e o volume em `/data` (porta host `8000` → container `8080`).
 
+### Pipeline Jenkins (Deploy e Smoke Test)
+
+Na `main`, após Build → Quality → Testes → Package, o stage **Deploy e Smoke Test** publica no Fly (`fly deploy`) e valida `GET /up` (issue [#28](https://github.com/C14-Inatel-2026-2/Artel/issues/28)).
+
+No Jenkins, cadastre a credencial secreta **`fly-api-token`** (Secret text) com um token Fly:
+
+```bash
+fly tokens create deploy -x 999999h -a artel-c14
+```
+
+Cole o valor gerado na credencial. Sem ela, o stage de Deploy na `main` falha. Branches que não sejam `main` só geram o pacote (não publicam).
+
+Detalhes do servidor local: [ci/jenkins/README.md](../ci/jenkins/README.md).
+
 ### Pausar para não gastar (entre demos)
 
-O Jenkins **não publica no Fly** (só build/quality/testes/empacote). Dá para desligar o host sem afetar a pipeline de CI.
+Dá para desligar o host sem afetar Build/Quality/Testes/Package. **Atenção:** um novo build da `main` no Jenkins sobe o app de novo via Deploy.
 
 Para zerar custo de máquina (CPU/RAM):
 
@@ -112,7 +126,7 @@ fly scale count 0 --app artel-c14 --yes
 
 A URL `https://artel-c14.fly.dev` fica indisponível até religar. O **volume** `artel_data` (1 GB) continua existindo e pode gerar um custo mínimo de armazenamento (~US$ 0,15/mês). Para eliminar esse custo também, apague o volume ou o app (`fly apps destroy artel-c14`) — isso remove o SQLite da demo.
 
-Para religar antes da apresentação:
+Para religar antes da apresentação (manual ou via pipeline na `main`):
 
 ```bash
 fly deploy --app artel-c14
