@@ -10,6 +10,10 @@ use InvalidArgumentException;
 
 class ExpenseService
 {
+    public function __construct(
+        protected DebtSimplificationService $debtSimplification = new DebtSimplificationService,
+    ) {}
+
     public function createExpense(Group $group, array $data): Expense
     {
         $members = $group->members;
@@ -97,6 +101,7 @@ class ExpenseService
             'total_expenses' => round((float) $group->expenses()->sum('amount'), 2),
             'expenses_count' => $group->expenses()->count(),
             'balances' => $balances,
+            'suggested_transfers' => $this->debtSimplification->suggestTransfers($balances),
         ];
     }
 }
