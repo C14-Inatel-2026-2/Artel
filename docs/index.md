@@ -14,6 +14,7 @@ O **Artel** é uma aplicação de divisão de despesas em grupo, desenvolvida co
 | Despesas | Listar despesas do grupo, registrar, exibir e excluir despesas. |
 | Divisão | Cada despesa é dividida **igualmente** entre todos os participantes do grupo no momento do registro, com tratamento de centavos. |
 | Saldos | Cálculo de total pago, total devido, saldo líquido e status (`a_receber`, `a_pagar`, `quitado`) por participante. |
+| Simplificação | Sugestão de transferências (`suggested_transfers`) que minimiza o número de PIX entre participantes com base nos saldos líquidos. |
 | Quitações | Registro de acertos (total ou parcial) entre dois participantes e histórico por grupo; o saldo considera os acertos. |
 | Usuários | Rotas web de cadastro (`POST /user/register`) e login por sessão (`POST /user/login`). |
 
