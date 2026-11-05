@@ -4,6 +4,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GroupBalanceController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupMemberController;
+use App\Http\Controllers\SettlementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,10 @@ Route::prefix('groups')->name('groups.')->group(function () {
     Route::get('/{group}/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('/{group}/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::get('/{group}/balances', [GroupBalanceController::class, 'index'])->name('balances.index');
+
+    // Quitações (acertos) entre participantes
+    Route::get('/{group}/settlements', [SettlementController::class, 'index'])->name('settlements.index');
+    Route::post('/{group}/settlements', [SettlementController::class, 'store'])->name('settlements.store');
 });
 
 Route::prefix('expenses')->name('expenses.')->group(function () {
