@@ -34,4 +34,12 @@ class Group extends Model
     {
         return $this->hasMany(Expense::class);
     }
+
+    /**
+     * Quitações (acertos) registradas no grupo.
+     */
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class);
+    }
 }
