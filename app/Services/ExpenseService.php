@@ -10,6 +10,10 @@ use InvalidArgumentException;
 
 class ExpenseService
 {
+    public function __construct(
+        protected DebtSimplificationService $debtSimplification = new DebtSimplificationService,
+    ) {}
+
     public function createExpense(Group $group, array $data): Expense
     {
         $members = $group->members;
@@ -66,7 +70,11 @@ class ExpenseService
                 ->whereHas('expense', fn ($q) => $q->where('group_id', $group->id))
                 ->sum('amount');
 
-            $netBalance = round($totalPaid - $totalOwed, 2);
+            // Acertos: quem pagou reduz a dívida (sobe o saldo); quem recebeu reduz o crédito (desce o saldo).
+            $totalSettledPaid = (float) $group->settlements()->where('paid_by', $member->id)->sum('amount');
+            $totalSettledReceived = (float) $group->settlements()->where('paid_to', $member->id)->sum('amount');
+
+            $netBalance = round($totalPaid - $totalOwed + $totalSettledPaid - $totalSettledReceived, 2);
 
             $status = match (true) {
                 $netBalance > 0 => 'a_receber',
@@ -93,6 +101,7 @@ class ExpenseService
             'total_expenses' => round((float) $group->expenses()->sum('amount'), 2),
             'expenses_count' => $group->expenses()->count(),
             'balances' => $balances,
+            'suggested_transfers' => $this->debtSimplification->suggestTransfers($balances),
         ];
     }
 }

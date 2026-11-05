@@ -34,6 +34,8 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 | GET | `/api/groups/{group}/expenses` | `ExpenseController@index` | Lista as despesas do grupo |
 | POST | `/api/groups/{group}/expenses` | `ExpenseController@store` | Registra uma despesa |
 | GET | `/api/groups/{group}/balances` | `GroupBalanceController@index` | Saldos do grupo |
+| GET | `/api/groups/{group}/settlements` | `SettlementController@index` | Histórico de quitações do grupo |
+| POST | `/api/groups/{group}/settlements` | `SettlementController@store` | Registra uma quitação entre dois participantes |
 | GET | `/api/expenses/{expense}` | `ExpenseController@show` | Detalha uma despesa |
 | DELETE | `/api/expenses/{expense}` | `ExpenseController@destroy` | Exclui uma despesa |
 
@@ -171,11 +173,47 @@ Remove as parcelas e a despesa (em uma transação).
           "net_balance": 0.0,
           "status": "a_receber | a_pagar | quitado"
         }
+      ],
+      "suggested_transfers": [
+        {
+          "from": { "id": 0, "name": "...", "email": "..." },
+          "to": { "id": 0, "name": "...", "email": "..." },
+          "amount": 0.0
+        }
       ]
     }
     ```
 
     Os valores acima indicam apenas a estrutura e os tipos retornados por `ExpenseService::calculateBalance`. Não são uma resposta real.
+
+    O `net_balance` já incorpora as quitações do grupo: cada acerto aumenta o saldo de quem pagou (`paid_by`) e diminui o de quem recebeu (`paid_to`).
+
+    `suggested_transfers` é a sugestão mínima de PIX/transferências para zerar os saldos (veja [simplificação](arquitetura.md#simplificacao-de-dividas-debtsimplificationservicesuggesttransfers)). Membros `quitado` não aparecem; se todos estiverem quitados, a lista é `[]`.
+
+---
+
+## Quitações
+
+### `GET /api/groups/{group}/settlements`
+
+Lista o histórico de acertos do grupo, do mais recente para o mais antigo (`settled_at`, depois `id`).
+
+- **200**: array de quitações, cada uma com `payer` e `payee` (`id`, `name`, `email`).
+
+### `POST /api/groups/{group}/settlements`
+
+Registra uma quitação (total ou parcial) entre dois participantes do mesmo grupo. O campo `settled_at` é preenchido automaticamente com a data/hora do registro.
+
+| Campo | Regras (`StoreSettlementRequest`) |
+|---|---|
+| `payer_id` | obrigatório, inteiro, deve existir em `users.id`, ser participante do grupo e diferente de `payee_id` |
+| `payee_id` | obrigatório, inteiro, deve existir em `users.id` e ser participante do grupo |
+| `amount` | obrigatório, numérico, mínimo `0.01` |
+
+No banco, `payer_id` é persistido como `paid_by` e `payee_id` como `paid_to`.
+
+- **201**: quitação criada, com `payer` e `payee`.
+- **422**: erro de validação (mesmo usuário nos dois lados, alguém fora do grupo, valor inválido etc.).
 
 ---
 
