@@ -173,6 +173,13 @@ Remove as parcelas e a despesa (em uma transação).
           "net_balance": 0.0,
           "status": "a_receber | a_pagar | quitado"
         }
+      ],
+      "suggested_transfers": [
+        {
+          "from": { "id": 0, "name": "...", "email": "..." },
+          "to": { "id": 0, "name": "...", "email": "..." },
+          "amount": 0.0
+        }
       ]
     }
     ```
@@ -180,6 +187,8 @@ Remove as parcelas e a despesa (em uma transação).
     Os valores acima indicam apenas a estrutura e os tipos retornados por `ExpenseService::calculateBalance`. Não são uma resposta real.
 
     O `net_balance` já incorpora as quitações do grupo: cada acerto aumenta o saldo de quem pagou (`paid_by`) e diminui o de quem recebeu (`paid_to`).
+
+    `suggested_transfers` é a sugestão mínima de PIX/transferências para zerar os saldos (veja [simplificação](arquitetura.md#simplificacao-de-dividas-debtsimplificationservicesuggesttransfers)). Membros `quitado` não aparecem; se todos estiverem quitados, a lista é `[]`.
 
 ---
 

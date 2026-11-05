@@ -24,7 +24,9 @@ app/
 │       └── StoreSettlementRequest.php
 ├── Models/                             # Eloquent: User, Group, GroupMember, Expense, ExpenseSplit, Settlement
 ├── Policies/GroupPolicy.php            # Regras de autorização (ainda não aplicadas)
-└── Services/ExpenseService.php         # Divisão de despesas e cálculo de saldos
+└── Services/
+    ├── ExpenseService.php              # Divisão de despesas e cálculo de saldos
+    └── DebtSimplificationService.php   # Sugestão mínima de transferências (centavos)
 routes/
 ├── api.php                             # Rotas REST, prefixo /api
 ├── web.php                             # Rota "/" e inclusão de user.php
@@ -40,7 +42,7 @@ O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está 
 | Rotas | Mapear URL e método HTTP para o controller | Usam *route model binding* (`{group}`, `{expense}`, `{user}`): um ID inexistente resulta em 404. |
 | Form Requests | Validar a entrada e definir mensagens em português | `authorize()` sempre retorna `true`. `StoreExpenseRequest` e `StoreSettlementRequest` também verificam se os usuários envolvidos participam do grupo. |
 | Controllers | Orquestrar a requisição e montar a resposta JSON | `GroupController`, `GroupMemberController` e `SettlementController` acessam os models diretamente. `ExpenseController` e `GroupBalanceController` delegam ao `ExpenseService`. |
-| Service | Regra de negócio de despesas | `createExpense`, `deleteExpense` e `calculateBalance` (inclui acertos de `settlements`). As operações de escrita usam `DB::transaction`. |
+| Service | Regra de negócio de despesas e simplificação | `ExpenseService` (`createExpense`, `deleteExpense`, `calculateBalance`, com acertos de `settlements`) e `DebtSimplificationService` (`suggestTransfers`). As operações de escrita usam `DB::transaction`. |
 | Models | Mapeamento das tabelas e relacionamentos | Eloquent. As respostas JSON são os próprios models serializados (não há API Resources). |
 | Policy | Regras de autorização para grupos | `GroupPolicy` define `viewAny`, `view`, `update`, `delete`, `addMember` e `removeMember`, mas **não é invocada** pelo código atual. |
 
@@ -68,6 +70,17 @@ Para cada participante atual do grupo:
 
 !!! note
     As parcelas são definidas no momento do registro da despesa. Participantes adicionados depois não entram na divisão das despesas anteriores, e o saldo considera apenas quem é participante no momento da consulta.
+
+### Simplificação de dívidas (`DebtSimplificationService::suggestTransfers`)
+
+A partir dos `net_balance` já calculados:
+
+1. Converte cada saldo para centavos inteiros.
+2. Separa devedores (`net_balance < 0`) e credores (`net_balance > 0`). Quem está `quitado` é ignorado.
+3. Emparelha iterativamente o maior devedor com o maior credor, registrando uma transferência de `min(|dívida|, crédito)`.
+4. Repete até zerar todos os saldos pendentes.
+
+O resultado entra em `suggested_transfers` na resposta de `GET /api/groups/{group}/balances`.
 
 ## Banco de dados
 
