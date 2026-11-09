@@ -17,7 +17,7 @@ class GroupController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user() ?? User::first();
+        $user = $this->resolveActingUser($request);
 
         if (! $user) {
             return response()->json([], 200);
@@ -39,7 +39,7 @@ class GroupController extends Controller
      */
     public function store(StoreGroupRequest $request): JsonResponse
     {
-        $user = $request->user() ?? User::first();
+        $user = $this->resolveActingUser($request);
 
         if (! $user) {
             return response()->json(['message' => 'Nenhum usuário autenticado para criar o grupo.'], 401);
@@ -100,5 +100,14 @@ class GroupController extends Controller
         return response()->json([
             'message' => 'Grupo excluído com sucesso.',
         ], 200);
+    }
+
+    /**
+     * Resolve o usuário autenticado, caindo para o primeiro usuário da base
+     * quando a requisição não traz autenticação (fallback temporário, API ainda sem auth).
+     */
+    private function resolveActingUser(Request $request): ?User
+    {
+        return $request->user() ?? User::first();
     }
 }
