@@ -14,7 +14,22 @@ class LayoutTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('<html lang="pt-BR">', false);
         $response->assertSee('<title>Artel</title>', false);
+        $response->assertDontSee('<footer', false);
         $response->assertSee('Aplicação de divisão de despesas em grupo.');
+    }
+
+    public function test_mensagem_de_status_aparece_como_notificacao_flutuante(): void
+    {
+        $response = $this->withSession(['status' => 'Conta criada.'])->get('/');
+
+        $response->assertSee('Conta criada.');
+        $response->assertSee('role="status"', false);
+        $response->assertSee('data-timeout="5000"', false);
+    }
+
+    public function test_sem_mensagens_nenhuma_notificacao_e_renderizada(): void
+    {
+        $this->get('/')->assertDontSee('data-toast', false);
     }
 
     public function test_layout_disponibiliza_areas_reutilizaveis(): void

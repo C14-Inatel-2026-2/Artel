@@ -24,31 +24,11 @@
         </div>
     </header>
 
-    <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        @if (session('status'))
-            <div class="mb-6 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                <ul class="list-inside list-disc space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
+    <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
         @yield('content')
     </main>
 
-    <footer class="border-t border-slate-200 bg-white">
-        <div class="mx-auto max-w-5xl px-4 py-4 text-center text-xs text-slate-500">
-            &copy; {{ date('Y') }} Artel &middot; Divisão de despesas em grupo
-        </div>
-    </footer>
+    <x-toasts />
 
     @stack('scripts')
 </body>
