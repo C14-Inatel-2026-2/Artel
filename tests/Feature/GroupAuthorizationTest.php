@@ -68,6 +68,14 @@ class GroupAuthorizationTest extends TestCase
     }
 
     #[DataProvider('groupRoutes')]
+    public function test_anonymous_receives_401_on_group_routes(string $method, string $uri): void
+    {
+        $this->json($method, $this->resolveUri($uri))
+            ->assertUnauthorized()
+            ->assertExactJson(['message' => 'Não autenticado.']);
+    }
+
+    #[DataProvider('groupRoutes')]
     public function test_stranger_receives_403_on_group_routes(string $method, string $uri): void
     {
         Sanctum::actingAs($this->stranger);

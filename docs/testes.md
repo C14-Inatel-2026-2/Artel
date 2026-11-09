@@ -44,8 +44,8 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/RegisterRequestTest.php` | Regras e mensagens de `RegisterRequest`: e-mail duplicado e confirmação de senha |
 | `Unit/LoginRequestTest.php` | Regras e mensagens de `LoginRequest` e o método `credentials()` |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
-| `Feature/Auth/AuthTest.php` | Endpoints `/api/auth/*`: cadastro, login (sucesso, 401 e limite de tentativas), `me` e revogação do token no logout |
-| `Feature/GroupAuthorizationTest.php` | Permissões de dono, participante e estranho em grupos, participantes, despesas e saldos: 403 consistente, 403 antes do 422 e remoção do dono bloqueada com 422 |
+| `Feature/AuthTest.php` | Endpoints `/api/auth/*`: cadastro, login (sucesso, 401 e limite de tentativas), `me` e revogação do token no logout |
+| `Feature/GroupAuthorizationTest.php` | Permissões de anônimo, dono, participante e estranho em grupos, participantes, despesas e saldos: 401 sem token, 403 consistente, 403 antes do 422 e remoção do dono bloqueada com 422 |
 | `Feature/ProtectedRoutesTest.php` | 401 em todas as rotas protegidas sem token ou com token inválido, e uso do usuário autenticado em `GET` e `POST /api/groups` |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
 
