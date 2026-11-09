@@ -52,6 +52,13 @@ A imagem Docker é de produção (sem dependências de desenvolvimento), então 
 
 A pipeline roda no Jenkins (`Jenkinsfile`): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Deploy e Smoke Test** no Fly.io. O servidor Jenkins local está em [`ci/jenkins/`](ci/jenkins/README.md).
 
+## Refactorings
+
+| Smell | Refactoring | Por quê | PR |
+|---|---|---|---|
+| Código duplicado: `$request->user() ?? User::first()` repetido em `GroupController::index` e `GroupController::store` | Extract Method (`resolveActingUser`) | Centraliza a regra de fallback de usuário em um único lugar, evitando que as duas rotas fiquem fora de sincronia caso a regra mude | _a preencher_ |
+| Dead code: model `GroupMember` nunca era instanciado — a relação `group_members` já é manipulada via `Group::members()` (pivô `belongsToMany`) | Remove Dead Code | Remove uma classe sem uso real, que só confundia quem lia a arquitetura do projeto (documentada em `docs/arquitetura.md` como não utilizada) | _a preencher_ |
+
 ## Documentação
 
 A documentação técnica fica em [`docs/`](docs/index.md) (MkDocs):
