@@ -14,6 +14,8 @@ class GroupBalanceController extends Controller
 
     public function index(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $balances = $this->expenseService->calculateBalance($group);
 
         return response()->json($balances, 200);
