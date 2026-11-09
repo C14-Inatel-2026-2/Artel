@@ -22,7 +22,7 @@ app/
 │       ├── AddGroupMemberRequest.php
 │       ├── StoreExpenseRequest.php
 │       └── StoreSettlementRequest.php
-├── Models/                             # Eloquent: User, Group, GroupMember, Expense, ExpenseSplit, Settlement
+├── Models/                             # Eloquent: User, Group, Expense, ExpenseSplit, Settlement
 ├── Policies/GroupPolicy.php            # Regras de autorização (ainda não aplicadas)
 └── Services/
     ├── ExpenseService.php              # Divisão de despesas e cálculo de saldos
@@ -149,4 +149,3 @@ erDiagram
 | `Expense` | `payer` (belongsTo User por `paid_by`), `group` (belongsTo Group), `splits` (hasMany ExpenseSplit) |
 | `ExpenseSplit` | `expense` (belongsTo Expense), `user` (belongsTo User) |
 | `Settlement` | `group` (belongsTo Group), `payer` (belongsTo User por `paid_by`), `payee` (belongsTo User por `paid_to`) |
-| `GroupMember` | `group` (belongsTo Group), `user` (belongsTo User). O código atual manipula a tabela pivô pela relação `members`, sem usar este model. |
