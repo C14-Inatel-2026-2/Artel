@@ -26,7 +26,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
     });
 });
 
-Route::prefix('groups')->name('groups.')->group(function () {
+Route::middleware('auth:sanctum')->prefix('groups')->name('groups.')->group(function () {
     Route::get('/', [GroupController::class, 'index'])->name('index');
     Route::post('/', [GroupController::class, 'store'])->name('store');
     Route::get('/{group}', [GroupController::class, 'show'])->name('show');
@@ -44,7 +44,7 @@ Route::prefix('groups')->name('groups.')->group(function () {
     Route::get('/{group}/balances', [GroupBalanceController::class, 'index'])->name('balances.index');
 });
 
-Route::prefix('expenses')->name('expenses.')->group(function () {
+Route::middleware('auth:sanctum')->prefix('expenses')->name('expenses.')->group(function () {
     Route::get('/{expense}', [ExpenseController::class, 'show'])->name('show');
     Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
 });
