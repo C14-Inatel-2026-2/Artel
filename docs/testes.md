@@ -39,10 +39,11 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/GroupBalanceControllerTest.php` | `index` com service mockado: retorno 200 e propagação de exceção |
 | `Unit/GroupControllerTest.php` | `destroy`: resposta de sucesso e propagação de exceção |
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
-| `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias e valor mínimo de `StoreExpenseRequest` |
+| `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias, valor mínimo e regras de divisão (`split_type`, `participants`, `splits`) de `StoreExpenseRequest` |
 | `Unit/StoreGroupRequestTest.php` | Regras de `StoreGroupRequest` e falha com nome curto |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
+| `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |
 
 ## Cobertura
 
@@ -54,7 +55,7 @@ php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 
 ## Limitações conhecidas
 
-- **Quase todos os testes são unitários com mocks.** Não há testes de feature que exercitem os endpoints da API via HTTP.
-- **Regras centrais sem teste:** a divisão em centavos (`createExpense`) e o cálculo de saldo (`calculateBalance`) não têm testes com banco de dados.
+- **A maior parte dos testes é unitária com mocks.** Poucos testes de feature exercitam os endpoints da API via HTTP; o registro de despesas com divisão personalizada é coberto por `ExpenseSplitTest`.
+- **Regras centrais com cobertura parcial:** a divisão em centavos (`createExpense`) tem testes com banco de dados em `ExpenseSplitTest`, mas o cálculo de saldo (`calculateBalance`) só é exercitado de forma indireta.
 - **`ExampleTest`** do skeleton Laravel ainda está presente nas duas suítes.
 - **Autorização:** `GroupPolicyTest` testa a policy isoladamente, mas a policy não é aplicada nas rotas (veja [Visão geral](index.md#limitacoes-atuais)).
