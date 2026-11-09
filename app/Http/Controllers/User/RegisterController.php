@@ -23,6 +23,8 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect('/');
+        return redirect()
+            ->route('login')
+            ->with('status', 'Conta criada. Entre para continuar.');
     }
 }
