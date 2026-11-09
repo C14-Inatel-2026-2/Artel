@@ -14,6 +14,8 @@ class GroupMemberController extends Controller
      */
     public function index(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $members = $group->members()
             ->select('users.id', 'users.name', 'users.email')
             ->get();
@@ -53,12 +55,16 @@ class GroupMemberController extends Controller
      */
     public function destroy(Group $group, User $user): JsonResponse
     {
+        $this->authorize('view', $group);
+
         // O criador/dono não pode ser removido do grupo
         if ($user->id === $group->user_id) {
             return response()->json([
                 'message' => 'O criador do grupo não pode ser removido.',
             ], 422);
         }
+
+        $this->authorize('removeMember', [$group, $user]);
 
         if (! $group->members()->where('users.id', $user->id)->exists()) {
             return response()->json([

@@ -59,6 +59,8 @@ class GroupController extends Controller
      */
     public function show(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $group->load([
             'owner:id,name,email',
             'members:id,name,email',
@@ -86,6 +88,8 @@ class GroupController extends Controller
      */
     public function destroy(Group $group): JsonResponse
     {
+        $this->authorize('delete', $group);
+
         $group->delete();
 
         return response()->json([
