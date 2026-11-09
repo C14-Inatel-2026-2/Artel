@@ -20,12 +20,12 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D12 | **Interface web em Blade + Tailwind CSS (Vite)**, servida pelo próprio Laravel junto com a API | `package.json`, `vite.config.js`. Planejada na US06 ([#42](https://github.com/C14-Inatel-2026-2/Artel/issues/42)); hoje existe apenas a view `welcome`. |
 | D13 | **Autenticação da API com tokens do Laravel Sanctum** (`Authorization: Bearer`), sem expiração, revogados no logout. Rotas de grupos, participantes, despesas e saldos exigem `auth:sanctum` e respondem `401` em JSON sem token | `config/sanctum.php`, `routes/api.php`, `Auth\AuthController`, `bootstrap/app.php`. Resolve as pendências P1 e P3. |
 | D14 | **Cadastro e login disponíveis como endpoints JSON** (`/api/auth/*`), mantendo as rotas web (`/user/*`) com sessão. Ambos usam `RegisterRequest` e `LoginRequest` | `routes/api.php`, `routes/user.php`, `app/Http/Requests/` |
+| D15 | **Autorização por grupo via `GroupPolicy`**: apenas dono e participantes acessam o grupo, suas despesas e saldos; renomear e excluir o grupo é exclusivo do dono. Respostas `403` com `{"message": "Acesso negado."}`. Nos endpoints com Form Request, a autorização fica no `authorize()` do request para rodar antes da validação | `app/Policies/GroupPolicy.php`, controllers de grupos, participantes, despesas e saldos, `UpdateGroupRequest`, `AddGroupMemberRequest`, `StoreExpenseRequest`, `bootstrap/app.php`. Resolve a pendência P2. |
 
 ## Pendentes
 
 | # | Questão | Situação atual |
 |---|---|---|
-| P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. Qualquer usuário autenticado acessa qualquer grupo. **Urgente** enquanto a demo pública estiver no ar. |
 | P5 | **Tipos de divisão além da igualitária** | Não implementado. |
 | P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
 | P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`) (veja [CI/CD e deploy](ci-cd.md)). Falta registrar as evidências do Jenkins ([#29](https://github.com/C14-Inatel-2026-2/Artel/issues/29)). |

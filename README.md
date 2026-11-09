@@ -8,7 +8,7 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 - Health: `GET /up`
 - API (ex.): `POST /api/auth/login` e, com o token, `GET /api/groups`
 
-> **Atenção:** a API pública exige login, mas ainda **não restringe o acesso aos grupos do usuário**. Não use dados reais.
+> **Atenção:** a demo é um ambiente de demonstração. Não use dados reais.
 >
 > Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Um novo build da `main` no Jenkins volta a publicar no Fly. Veja [CI/CD e deploy](docs/ci-cd.md).
 

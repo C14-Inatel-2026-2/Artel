@@ -2,8 +2,8 @@
 
 Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rotas de `routes/api.php`).
 
-!!! warning "Autorização ainda não aplicada"
-    Todas as rotas de grupos, participantes, despesas e saldos exigem um token válido (veja [Autenticação](#autenticacao)). Porém a `GroupPolicy` ainda não é aplicada: qualquer usuário autenticado consegue acessar grupos dos quais não participa.
+!!! info "Autenticação e autorização"
+    Todas as rotas de grupos, participantes, despesas e saldos exigem um token válido (veja [Autenticação](#autenticacao)). O acesso a cada grupo é restrito ao dono e aos participantes, conforme a `GroupPolicy` (veja [Permissões](#permissoes)).
 
 ## Convenções
 
@@ -17,33 +17,50 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 | Situação | Status | Corpo |
 |---|---|---|
 | Token ausente, inválido ou revogado em rota protegida | `401` | `{"message": "Não autenticado."}` (com ou sem `Accept: application/json`). |
+| Usuário autenticado sem permissão sobre o grupo (veja [Permissões](#permissoes)) | `403` | `{"message": "Acesso negado."}` |
 | Falha de validação (Form Request) | `422` | Formato padrão do Laravel: `message` e `errors` (objeto campo → lista de mensagens). |
 | ID inexistente em `{group}`, `{expense}` ou `{user}` | `404` | JSON de erro padrão do Laravel (*route model binding*). |
 | Erro de regra de negócio tratado no controller | `422` / `404` / `401` | `{"message": "..."}` (detalhado em cada endpoint). |
 
 ## Resumo dos endpoints
 
-| Método | Rota | Controller | Descrição |
-|---|---|---|---|
-| POST | `/api/auth/register` | `Auth\AuthController@register` | Cadastra um usuário e retorna um token |
-| POST | `/api/auth/login` | `Auth\AuthController@login` | Autentica e retorna um token |
-| POST | `/api/auth/logout` | `Auth\AuthController@logout` | Revoga o token atual |
-| GET | `/api/auth/me` | `Auth\AuthController@me` | Retorna o usuário autenticado |
-| GET | `/api/groups` | `GroupController@index` | Lista os grupos do usuário atual |
-| POST | `/api/groups` | `GroupController@store` | Cria um grupo |
-| GET | `/api/groups/{group}` | `GroupController@show` | Detalha um grupo |
-| PUT | `/api/groups/{group}` | `GroupController@update` | Renomeia um grupo |
-| DELETE | `/api/groups/{group}` | `GroupController@destroy` | Exclui um grupo |
-| GET | `/api/groups/{group}/members` | `GroupMemberController@index` | Lista os participantes |
-| POST | `/api/groups/{group}/members` | `GroupMemberController@store` | Adiciona um participante |
-| DELETE | `/api/groups/{group}/members/{user}` | `GroupMemberController@destroy` | Remove um participante |
-| GET | `/api/groups/{group}/expenses` | `ExpenseController@index` | Lista as despesas do grupo |
-| POST | `/api/groups/{group}/expenses` | `ExpenseController@store` | Registra uma despesa |
-| GET | `/api/groups/{group}/balances` | `GroupBalanceController@index` | Saldos do grupo |
-| GET | `/api/expenses/{expense}` | `ExpenseController@show` | Detalha uma despesa |
-| DELETE | `/api/expenses/{expense}` | `ExpenseController@destroy` | Exclui uma despesa |
+| Método | Rota | Controller | Descrição | Quem pode |
+|---|---|---|---|---|
+| POST | `/api/auth/register` | `Auth\AuthController@register` | Cadastra um usuário e retorna um token | Público |
+| POST | `/api/auth/login` | `Auth\AuthController@login` | Autentica e retorna um token | Público |
+| POST | `/api/auth/logout` | `Auth\AuthController@logout` | Revoga o token atual | Autenticado |
+| GET | `/api/auth/me` | `Auth\AuthController@me` | Retorna o usuário autenticado | Autenticado |
+| GET | `/api/groups` | `GroupController@index` | Lista os grupos do usuário atual | Autenticado |
+| POST | `/api/groups` | `GroupController@store` | Cria um grupo | Autenticado |
+| GET | `/api/groups/{group}` | `GroupController@show` | Detalha um grupo | Participante |
+| PUT | `/api/groups/{group}` | `GroupController@update` | Renomeia um grupo | Dono |
+| DELETE | `/api/groups/{group}` | `GroupController@destroy` | Exclui um grupo | Dono |
+| GET | `/api/groups/{group}/members` | `GroupMemberController@index` | Lista os participantes | Participante |
+| POST | `/api/groups/{group}/members` | `GroupMemberController@store` | Adiciona um participante | Participante |
+| DELETE | `/api/groups/{group}/members/{user}` | `GroupMemberController@destroy` | Remove um participante | Dono, ou o próprio participante |
+| GET | `/api/groups/{group}/expenses` | `ExpenseController@index` | Lista as despesas do grupo | Participante |
+| POST | `/api/groups/{group}/expenses` | `ExpenseController@store` | Registra uma despesa | Participante |
+| GET | `/api/groups/{group}/balances` | `GroupBalanceController@index` | Saldos do grupo | Participante |
+| GET | `/api/expenses/{expense}` | `ExpenseController@show` | Detalha uma despesa | Participante do grupo da despesa |
+| DELETE | `/api/expenses/{expense}` | `ExpenseController@destroy` | Exclui uma despesa | Participante do grupo da despesa |
 
-A lista corresponde à saída de `php artisan route:list --except-vendor`. Exceto `register` e `login`, todas as rotas exigem autenticação (`auth:sanctum`).
+A lista corresponde à saída de `php artisan route:list --except-vendor`. Exceto `register` e `login`, todas as rotas exigem autenticação (`auth:sanctum`). "Participante" inclui o dono do grupo.
+
+## Permissões
+
+As regras ficam em `App\Policies\GroupPolicy`:
+
+| Regra | Quem é autorizado | Onde é aplicada |
+|---|---|---|
+| `view` | Dono ou participante | `GroupController@show`, `GroupMemberController@index` e `@destroy`, `ExpenseController@index`, `@show` e `@destroy`, `GroupBalanceController@index`, `StoreExpenseRequest` |
+| `update` | Dono | `UpdateGroupRequest` |
+| `delete` | Dono | `GroupController@destroy` |
+| `addMember` | Dono ou participante | `AddGroupMemberRequest` |
+| `removeMember` | Dono (remove qualquer participante) ou o próprio participante (sai do grupo) | `GroupMemberController@destroy` |
+
+- Nos endpoints com Form Request, a autorização roda no `authorize()` do request, **antes** da validação. Por isso, quem não tem permissão recebe `403`, e não `422`, sem descobrir quais e-mails estão cadastrados nem quem participa do grupo.
+- Ao remover um participante, a ordem das verificações é: participação no grupo (`403`), tentativa de remover o dono (`422`), regra `removeMember` (`403`) e, por fim, se o usuário é participante (`404`).
+- Um ID inexistente continua resultando em `404`, porque o *route model binding* acontece antes da autorização.
 
 ---
 
@@ -124,6 +141,7 @@ Cria um grupo tendo o usuário autenticado como dono e o adiciona automaticament
 ### `GET /api/groups/{group}`
 
 - **200**: grupo com `owner`, `members` e `expenses` (cada despesa com `payer`).
+- **403**: o usuário não participa do grupo.
 
 ### `PUT /api/groups/{group}`
 
@@ -132,6 +150,7 @@ Cria um grupo tendo o usuário autenticado como dono e o adiciona automaticament
 | `name` | obrigatório, string, 3–255 caracteres |
 
 - **200**: grupo atualizado, com `owner` e `members`.
+- **403**: o usuário não é o dono do grupo.
 - **422**: erro de validação.
 
 ### `DELETE /api/groups/{group}`
@@ -139,6 +158,7 @@ Cria um grupo tendo o usuário autenticado como dono e o adiciona automaticament
 Exclui o grupo. Participantes, despesas e parcelas são removidos em cascata pelo banco.
 
 - **200**: `{"message": "Grupo excluído com sucesso."}`
+- **403**: o usuário não é o dono do grupo.
 
 ---
 
@@ -147,6 +167,7 @@ Exclui o grupo. Participantes, despesas e parcelas são removidos em cascata pel
 ### `GET /api/groups/{group}/members`
 
 - **200**: array de usuários (`id`, `name`, `email`, mais `pivot`).
+- **403**: o usuário não participa do grupo.
 
 ### `POST /api/groups/{group}/members`
 
@@ -166,11 +187,13 @@ Adiciona um usuário existente ao grupo. Informe `email` **ou** `user_id`. Se am
     }
     ```
 
+- **403**: o usuário não participa do grupo.
 - **422**: `{"message": "Este usuário já faz parte do grupo."}` ou erro de validação.
 
 ### `DELETE /api/groups/{group}/members/{user}`
 
 - **200**: `{"message": "Participante removido do grupo com sucesso."}`
+- **403**: o usuário não participa do grupo, ou é participante e tenta remover outra pessoa.
 - **422**: `{"message": "O criador do grupo não pode ser removido."}`
 - **404**: `{"message": "Este usuário não é participante deste grupo."}`
 
@@ -184,6 +207,7 @@ Adiciona um usuário existente ao grupo. Informe `email` **ou** `user_id`. Se am
 ### `GET /api/groups/{group}/expenses`
 
 - **200**: array de despesas do grupo, da mais recente para a mais antiga, cada uma com `payer` e `splits` (cada parcela com `user`).
+- **403**: o usuário não participa do grupo.
 
 ### `POST /api/groups/{group}/expenses`
 
@@ -196,17 +220,20 @@ Registra uma despesa e a divide igualmente entre os participantes atuais do grup
 | `paid_by` | obrigatório, inteiro, deve existir em `users.id` **e** ser participante do grupo |
 
 - **201**: despesa criada, com `payer` e `splits`.
+- **403**: o usuário não participa do grupo.
 - **422**: erro de validação (por exemplo, `paid_by`: "O pagador deve ser um participante do grupo.") ou `{"message": "O grupo não possui participantes para divisão da despesa."}`.
 
 ### `GET /api/expenses/{expense}`
 
 - **200**: despesa com `group` (`id`, `name`), `payer` e `splits` (cada parcela com `user`).
+- **403**: o usuário não participa do grupo da despesa.
 
 ### `DELETE /api/expenses/{expense}`
 
 Remove as parcelas e a despesa (em uma transação).
 
 - **200**: `{"message": "Despesa excluída com sucesso."}`
+- **403**: o usuário não participa do grupo da despesa.
 
 ---
 
@@ -235,6 +262,8 @@ Remove as parcelas e a despesa (em uma transação).
     ```
 
     Os valores acima indicam apenas a estrutura e os tipos retornados por `ExpenseService::calculateBalance`. Não são uma resposta real.
+
+- **403**: o usuário não participa do grupo.
 
 ---
 

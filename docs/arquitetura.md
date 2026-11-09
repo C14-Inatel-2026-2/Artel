@@ -25,7 +25,7 @@ app/
 │       ├── RegisterRequest.php         # Usado pela API e pela rota web de cadastro
 │       └── LoginRequest.php            # Usado pela API e pela rota web de login
 ├── Models/                             # Eloquent: User, Group, GroupMember, Expense, ExpenseSplit
-├── Policies/GroupPolicy.php            # Regras de autorização (ainda não aplicadas)
+├── Policies/GroupPolicy.php            # Regras de autorização por grupo
 └── Services/ExpenseService.php         # Divisão de despesas e cálculo de saldos
 routes/
 ├── api.php                             # Rotas REST, prefixo /api (/api/auth/* e rotas protegidas por auth:sanctum)
@@ -33,18 +33,18 @@ routes/
 └── user.php                            # /user/register e /user/login
 ```
 
-O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está definido que exceções são renderizadas como JSON para requisições em `api/*` ou que enviem `Accept: application/json`, e que requisições não autenticadas em `api/*` recebem `401` com `{"message": "Não autenticado."}` em vez de redirecionamento.
+O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está definido que exceções são renderizadas como JSON para requisições em `api/*` ou que enviem `Accept: application/json`, que requisições não autenticadas em `api/*` recebem `401` com `{"message": "Não autenticado."}` em vez de redirecionamento, e que acessos negados pela policy recebem `403` com `{"message": "Acesso negado."}`.
 
 ## Responsabilidades das camadas
 
 | Camada | Responsabilidade | Observações |
 |---|---|---|
 | Rotas | Mapear URL e método HTTP para o controller | Usam *route model binding* (`{group}`, `{expense}`, `{user}`): um ID inexistente resulta em 404. Exceto `register` e `login`, exigem `auth:sanctum`, que é verificado antes do binding (sem token, a resposta é 401 mesmo para IDs inexistentes). |
-| Form Requests | Validar a entrada e definir mensagens em português | `authorize()` sempre retorna `true`. `StoreExpenseRequest` também verifica se o pagador participa do grupo. |
+| Form Requests | Validar a entrada e definir mensagens em português | `UpdateGroupRequest`, `AddGroupMemberRequest` e `StoreExpenseRequest` consultam a `GroupPolicy` no `authorize()`; os demais retornam `true`. `StoreExpenseRequest` também verifica se o pagador participa do grupo. |
 | Controllers | Orquestrar a requisição e montar a resposta JSON | `GroupController` e `GroupMemberController` acessam os models diretamente. `ExpenseController` e `GroupBalanceController` delegam ao `ExpenseService`. |
 | Service | Regra de negócio de despesas | `createExpense`, `deleteExpense` e `calculateBalance`. As operações de escrita usam `DB::transaction`. |
 | Models | Mapeamento das tabelas e relacionamentos | Eloquent. As respostas JSON são os próprios models serializados (não há API Resources). |
-| Policy | Regras de autorização para grupos | `GroupPolicy` define `viewAny`, `view`, `update`, `delete`, `addMember` e `removeMember`, mas **não é invocada** pelo código atual. |
+| Policy | Regras de autorização para grupos | `GroupPolicy` define `viewAny`, `view`, `update`, `delete`, `addMember` e `removeMember`. É aplicada com `$this->authorize()` nos controllers (trait `AuthorizesRequests` no `Controller` base) e no `authorize()` dos Form Requests de escrita. Despesas e saldos usam a regra `view` do grupo. Veja [Permissões](api.md#permissoes). |
 
 ## Regras de negócio no `ExpenseService`
 
