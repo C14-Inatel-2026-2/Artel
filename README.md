@@ -6,9 +6,9 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 - URL: [https://artel-c14.fly.dev](https://artel-c14.fly.dev)
 - Health: `GET /up`
-- API (ex.): `GET /api/groups`
+- API (ex.): `POST /api/auth/login` e, com o token, `GET /api/groups`
 
-> **Atenção:** a API pública ainda **não tem autenticação**. Não use dados reais.
+> **Atenção:** a API pública exige login, mas ainda **não restringe o acesso aos grupos do usuário**. Não use dados reais.
 >
 > Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Um novo build da `main` no Jenkins volta a publicar no Fly. Veja [CI/CD e deploy](docs/ci-cd.md).
 

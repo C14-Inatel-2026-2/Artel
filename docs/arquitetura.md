@@ -12,6 +12,8 @@ app/
 │   │   ├── GroupMemberController.php   # Participantes do grupo
 │   │   ├── ExpenseController.php       # Despesas (delega ao ExpenseService)
 │   │   ├── GroupBalanceController.php  # Saldos (delega ao ExpenseService)
+│   │   ├── Auth/
+│   │   │   └── AuthController.php      # Cadastro, login, logout e /me da API (tokens Sanctum)
 │   │   └── User/
 │   │       ├── RegisterController.php  # Cadastro (rota web)
 │   │       └── LoginController.php     # Login por sessão (rota web)
@@ -19,23 +21,25 @@ app/
 │       ├── StoreGroupRequest.php
 │       ├── UpdateGroupRequest.php
 │       ├── AddGroupMemberRequest.php
-│       └── StoreExpenseRequest.php
+│       ├── StoreExpenseRequest.php
+│       ├── RegisterRequest.php         # Usado pela API e pela rota web de cadastro
+│       └── LoginRequest.php            # Usado pela API e pela rota web de login
 ├── Models/                             # Eloquent: User, Group, GroupMember, Expense, ExpenseSplit
 ├── Policies/GroupPolicy.php            # Regras de autorização (ainda não aplicadas)
 └── Services/ExpenseService.php         # Divisão de despesas e cálculo de saldos
 routes/
-├── api.php                             # Rotas REST, prefixo /api
+├── api.php                             # Rotas REST, prefixo /api (/api/auth/* e rotas protegidas por auth:sanctum)
 ├── web.php                             # Rota "/" e inclusão de user.php
 └── user.php                            # /user/register e /user/login
 ```
 
-O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está definido que exceções são renderizadas como JSON para requisições em `api/*` ou que enviem `Accept: application/json`.
+O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está definido que exceções são renderizadas como JSON para requisições em `api/*` ou que enviem `Accept: application/json`, e que requisições não autenticadas em `api/*` recebem `401` com `{"message": "Não autenticado."}` em vez de redirecionamento.
 
 ## Responsabilidades das camadas
 
 | Camada | Responsabilidade | Observações |
 |---|---|---|
-| Rotas | Mapear URL e método HTTP para o controller | Usam *route model binding* (`{group}`, `{expense}`, `{user}`): um ID inexistente resulta em 404. |
+| Rotas | Mapear URL e método HTTP para o controller | Usam *route model binding* (`{group}`, `{expense}`, `{user}`): um ID inexistente resulta em 404. Exceto `register` e `login`, exigem `auth:sanctum`, que é verificado antes do binding (sem token, a resposta é 401 mesmo para IDs inexistentes). |
 | Form Requests | Validar a entrada e definir mensagens em português | `authorize()` sempre retorna `true`. `StoreExpenseRequest` também verifica se o pagador participa do grupo. |
 | Controllers | Orquestrar a requisição e montar a resposta JSON | `GroupController` e `GroupMemberController` acessam os models diretamente. `ExpenseController` e `GroupBalanceController` delegam ao `ExpenseService`. |
 | Service | Regra de negócio de despesas | `createExpense`, `deleteExpense` e `calculateBalance`. As operações de escrita usam `DB::transaction`. |

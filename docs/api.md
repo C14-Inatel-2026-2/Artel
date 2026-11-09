@@ -2,12 +2,13 @@
 
 Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rotas de `routes/api.php`).
 
-!!! danger "Sem autenticação"
-    Nenhuma rota da API exige autenticação, e nenhuma regra de autorização é aplicada. Em `GET /groups` e `POST /groups`, o "usuário atual" é o usuário autenticado, se houver. Caso contrário, é usado o **primeiro usuário cadastrado** (`User::first()`).
+!!! warning "Autorização ainda não aplicada"
+    Todas as rotas de grupos, participantes, despesas e saldos exigem um token válido (veja [Autenticação](#autenticacao)). Porém a `GroupPolicy` ainda não é aplicada: qualquer usuário autenticado consegue acessar grupos dos quais não participa.
 
 ## Convenções
 
 - Envie `Content-Type: application/json` e `Accept: application/json`.
+- Nas rotas protegidas, envie o token obtido no cadastro ou login no header `Authorization: Bearer <token>`.
 - As respostas são os models Eloquent serializados em JSON. As relações carregadas aparecem como chaves aninhadas (`owner`, `members`, `payer`, `splits` etc.). As relações *many-to-many* incluem o campo `pivot` padrão do Eloquent.
 - Os campos `password` e `remember_token` de `User` são ocultos na serialização.
 
@@ -15,6 +16,7 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 
 | Situação | Status | Corpo |
 |---|---|---|
+| Token ausente, inválido ou revogado em rota protegida | `401` | `{"message": "Não autenticado."}` (com ou sem `Accept: application/json`). |
 | Falha de validação (Form Request) | `422` | Formato padrão do Laravel: `message` e `errors` (objeto campo → lista de mensagens). |
 | ID inexistente em `{group}`, `{expense}` ou `{user}` | `404` | JSON de erro padrão do Laravel (*route model binding*). |
 | Erro de regra de negócio tratado no controller | `422` / `404` / `401` | `{"message": "..."}` (detalhado em cada endpoint). |
@@ -23,6 +25,10 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 
 | Método | Rota | Controller | Descrição |
 |---|---|---|---|
+| POST | `/api/auth/register` | `Auth\AuthController@register` | Cadastra um usuário e retorna um token |
+| POST | `/api/auth/login` | `Auth\AuthController@login` | Autentica e retorna um token |
+| POST | `/api/auth/logout` | `Auth\AuthController@logout` | Revoga o token atual |
+| GET | `/api/auth/me` | `Auth\AuthController@me` | Retorna o usuário autenticado |
 | GET | `/api/groups` | `GroupController@index` | Lista os grupos do usuário atual |
 | POST | `/api/groups` | `GroupController@store` | Cria um grupo |
 | GET | `/api/groups/{group}` | `GroupController@show` | Detalha um grupo |
@@ -37,7 +43,62 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 | GET | `/api/expenses/{expense}` | `ExpenseController@show` | Detalha uma despesa |
 | DELETE | `/api/expenses/{expense}` | `ExpenseController@destroy` | Exclui uma despesa |
 
-A lista corresponde à saída de `php artisan route:list --except-vendor`.
+A lista corresponde à saída de `php artisan route:list --except-vendor`. Exceto `register` e `login`, todas as rotas exigem autenticação (`auth:sanctum`).
+
+---
+
+## Autenticação
+
+A autenticação usa tokens do **Laravel Sanctum**. Os tokens não expiram: ficam válidos até o logout.
+
+Resposta de sucesso do cadastro e do login:
+
+```json
+{
+  "message": "...",
+  "user": { "id": 0, "name": "...", "email": "...", "email_verified_at": null, "created_at": "...", "updated_at": "..." },
+  "token": "1|...",
+  "token_type": "Bearer"
+}
+```
+
+### `POST /api/auth/register`
+
+| Campo | Regras (`RegisterRequest`) |
+|---|---|
+| `name` | obrigatório, string, máx. 255 |
+| `email` | obrigatório, e-mail, máx. 255, único em `users` |
+| `password` | obrigatório, string, mín. 8, `confirmed` (exige `password_confirmation`) |
+
+- **201**: usuário criado, com `message` "Usuário cadastrado com sucesso." e o token.
+- **422**: erro de validação (por exemplo, `email`: "Este e-mail já está cadastrado.").
+
+### `POST /api/auth/login`
+
+Limitado a **5 tentativas por minuto**.
+
+| Campo | Regras (`LoginRequest`) |
+|---|---|
+| `email` | obrigatório, e-mail |
+| `password` | obrigatório, string |
+| `device_name` | opcional, string, máx. 255. Nome do token (padrão: `api`) |
+
+- **200**: `message` "Login realizado com sucesso." e o token.
+- **401**: `{"message": "E-mail ou senha inválidos."}`, para e-mail inexistente ou senha incorreta.
+- **422**: erro de validação.
+- **429**: limite de tentativas excedido.
+
+### `POST /api/auth/logout`
+
+Revoga apenas o token usado na requisição. Os demais tokens do usuário continuam válidos.
+
+- **200**: `{"message": "Logout realizado com sucesso."}`
+- **401**: `{"message": "Não autenticado."}`
+
+### `GET /api/auth/me`
+
+- **200**: o usuário autenticado (`id`, `name`, `email`, `email_verified_at`, `created_at`, `updated_at`).
+- **401**: `{"message": "Não autenticado."}`
 
 ---
 
@@ -45,21 +106,19 @@ A lista corresponde à saída de `php artisan route:list --except-vendor`.
 
 ### `GET /api/groups`
 
-Retorna os grupos em que o usuário atual é dono **ou** participante, ordenados do mais recente para o mais antigo.
+Retorna os grupos em que o usuário autenticado é dono **ou** participante, ordenados do mais recente para o mais antigo.
 
 - **200**: array de grupos, cada um com `owner` (`id`, `name`, `email`), `members` (`id`, `name`, `email`), `members_count` e `expenses_count`.
-- **200** com `[]`: quando não existe nenhum usuário no banco.
 
 ### `POST /api/groups`
 
-Cria um grupo tendo o usuário atual como dono e o adiciona automaticamente como participante (em uma transação).
+Cria um grupo tendo o usuário autenticado como dono e o adiciona automaticamente como participante (em uma transação).
 
 | Campo | Regras (`StoreGroupRequest`) |
 |---|---|
 | `name` | obrigatório, string, 3–255 caracteres |
 
 - **201**: grupo criado, com `owner` e `members`.
-- **401**: `{"message": "Nenhum usuário autenticado para criar o grupo."}`, quando não há nenhum usuário no banco.
 - **422**: erro de validação.
 
 ### `GET /api/groups/{group}`
@@ -183,21 +242,12 @@ Remove as parcelas e a despesa (em uma transação).
 
 Definidas em `routes/user.php` e incluídas por `routes/web.php`. **Não** ficam sob `/api`: usam o grupo de middleware `web` (sessão e verificação de token CSRF) e respondem com **redirecionamento**, não com JSON.
 
+As validações são as mesmas dos endpoints de [autenticação da API](#autenticacao), com os mesmos Form Requests.
+
 ### `POST /user/register`
 
-| Campo | Regras |
-|---|---|
-| `name` | obrigatório, string, máx. 255 |
-| `email` | obrigatório, e-mail, máx. 255, único em `users` |
-| `password` | obrigatório, string, mín. 8, `confirmed` (exige `password_confirmation`) |
-
-Cria o usuário (senha com hash) e redireciona para `/`. Não autentica o usuário criado.
+Valida com `RegisterRequest`, cria o usuário (senha com hash) e redireciona para `/`. Não autentica o usuário criado.
 
 ### `POST /user/login`
 
-| Campo | Regras |
-|---|---|
-| `email` | obrigatório, e-mail |
-| `password` | obrigatório, string |
-
-Em caso de sucesso, autentica por sessão e redireciona para `/`. Em caso de falha, volta à página anterior com o erro `email`: "Email ou senha errado".
+Valida com `LoginRequest`. Em caso de sucesso, autentica por sessão e redireciona para `/`. Em caso de falha, volta à página anterior com o erro `email`: "Email ou senha errado".

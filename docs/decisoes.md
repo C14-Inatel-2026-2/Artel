@@ -18,14 +18,14 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D10 | **Documentação técnica em MkDocs + Material**, com dependências Python isoladas em `requirements-docs.txt` | `mkdocs.yml`, `requirements-docs.txt` |
 | D11 | **Demo hospedada no Fly.io** (Docker Apache + SQLite em volume), app `artel-c14` | `fly.toml`, `docker/entrypoint.sh`, `Dockerfile`. URL: `https://artel-c14.fly.dev`. |
 | D12 | **Interface web em Blade + Tailwind CSS (Vite)**, servida pelo próprio Laravel junto com a API | `package.json`, `vite.config.js`. Planejada na US06 ([#42](https://github.com/C14-Inatel-2026-2/Artel/issues/42)); hoje existe apenas a view `welcome`. |
+| D13 | **Autenticação da API com tokens do Laravel Sanctum** (`Authorization: Bearer`), sem expiração, revogados no logout. Rotas de grupos, participantes, despesas e saldos exigem `auth:sanctum` e respondem `401` em JSON sem token | `config/sanctum.php`, `routes/api.php`, `Auth\AuthController`, `bootstrap/app.php`. Resolve as pendências P1 e P3. |
+| D14 | **Cadastro e login disponíveis como endpoints JSON** (`/api/auth/*`), mantendo as rotas web (`/user/*`) com sessão. Ambos usam `RegisterRequest` e `LoginRequest` | `routes/api.php`, `routes/user.php`, `app/Http/Requests/` |
 
 ## Pendentes
 
 | # | Questão | Situação atual |
 |---|---|---|
-| P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. **Urgente** enquanto a demo pública estiver no ar. |
-| P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. |
-| P3 | **Fluxo de cadastro/login**: rotas web com sessão ou endpoints de API | As rotas atuais estão no grupo `web` e redirecionam. |
+| P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. Qualquer usuário autenticado acessa qualquer grupo. **Urgente** enquanto a demo pública estiver no ar. |
 | P5 | **Tipos de divisão além da igualitária** | Não implementado. |
 | P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
 | P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`) (veja [CI/CD e deploy](ci-cd.md)). Falta registrar as evidências do Jenkins ([#29](https://github.com/C14-Inatel-2026-2/Artel/issues/29)). |

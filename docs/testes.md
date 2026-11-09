@@ -41,7 +41,11 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
 | `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias e valor mínimo de `StoreExpenseRequest` |
 | `Unit/StoreGroupRequestTest.php` | Regras de `StoreGroupRequest` e falha com nome curto |
+| `Unit/RegisterRequestTest.php` | Regras e mensagens de `RegisterRequest`: e-mail duplicado e confirmação de senha |
+| `Unit/LoginRequestTest.php` | Regras e mensagens de `LoginRequest` e o método `credentials()` |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
+| `Feature/Auth/AuthTest.php` | Endpoints `/api/auth/*`: cadastro, login (sucesso, 401 e limite de tentativas), `me` e revogação do token no logout |
+| `Feature/ProtectedRoutesTest.php` | 401 em todas as rotas protegidas sem token ou com token inválido, e uso do usuário autenticado em `GET` e `POST /api/groups` |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
 
 ## Cobertura
@@ -54,7 +58,7 @@ php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 
 ## Limitações conhecidas
 
-- **Quase todos os testes são unitários com mocks.** Não há testes de feature que exercitem os endpoints da API via HTTP.
+- **Poucos testes de feature.** Só a autenticação e a proteção das rotas são exercitadas via HTTP. Os demais endpoints são testados apenas com testes unitários e mocks.
 - **Regras centrais sem teste:** a divisão em centavos (`createExpense`) e o cálculo de saldo (`calculateBalance`) não têm testes com banco de dados.
 - **`ExampleTest`** do skeleton Laravel ainda está presente nas duas suítes.
 - **Autorização:** `GroupPolicyTest` testa a policy isoladamente, mas a policy não é aplicada nas rotas (veja [Visão geral](index.md#limitacoes-atuais)).
