@@ -56,8 +56,8 @@ A pipeline roda no Jenkins (`Jenkinsfile`): **Build → Quality → Testes e Cob
 
 | Smell | Refactoring | Por quê | PR |
 |---|---|---|---|
-| Código duplicado: `$request->user() ?? User::first()` repetido em `GroupController::index` e `GroupController::store` | Extract Method (`resolveActingUser`) | Centraliza a regra de fallback de usuário em um único lugar, evitando que as duas rotas fiquem fora de sincronia caso a regra mude | _a preencher_ |
-| Dead code: model `GroupMember` nunca era instanciado — a relação `group_members` já é manipulada via `Group::members()` (pivô `belongsToMany`) | Remove Dead Code | Remove uma classe sem uso real, que só confundia quem lia a arquitetura do projeto (documentada em `docs/arquitetura.md` como não utilizada) | _a preencher_ |
+| Código duplicado: `$group->members()->where(...)->exists()` repetido em `GroupMemberController`, `StoreExpenseRequest`, `StoreSettlementRequest` e `GroupPolicy` | Extract Method (`Group::hasMember`) | Centraliza a checagem de participação no grupo, evitando drift entre controllers, Form Requests e policies | #82 |
+| Dead code: model `GroupMember` nunca era instanciado — a relação `group_members` já é manipulada via `Group::members()` (pivô `belongsToMany`) | Remove Dead Code | Remove uma classe sem uso real, que só confundia quem lia a arquitetura do projeto (documentada em `docs/arquitetura.md` como não utilizada) | #82 |
 
 ## Documentação
 

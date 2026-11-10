@@ -42,7 +42,7 @@ class StoreExpenseRequest extends FormRequest
             $group = $this->route('group');
 
             if ($group instanceof Group && $this->filled('paid_by')) {
-                if (! $group->members()->where('users.id', $this->paid_by)->exists()) {
+                if (! $group->hasMember((int) $this->paid_by)) {
                     $validator->errors()->add('paid_by', 'O pagador deve ser um participante do grupo.');
                 }
             }

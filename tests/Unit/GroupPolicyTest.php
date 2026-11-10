@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use App\Models\Group;
 use App\Models\User;
 use App\Policies\GroupPolicy;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use PHPUnit\Framework\TestCase;
 
 class GroupPolicyTest extends TestCase
@@ -45,22 +44,13 @@ class GroupPolicyTest extends TestCase
         $user = new User;
         $user->id = 2;
 
-        $relationMock = \Mockery::mock(BelongsToMany::class);
-        $relationMock->shouldReceive('where')
-            ->once()
-            ->with('user_id', $user->id)
-            ->andReturnSelf();
-
-        $relationMock->shouldReceive('exists')
-            ->once()
-            ->andReturn(true);
-
-        $groupMock = $this->createPartialMock(Group::class, ['members']);
+        $groupMock = $this->createPartialMock(Group::class, ['hasMember']);
         $groupMock->user_id = 1;
 
         $groupMock->expects($this->once())
-            ->method('members')
-            ->willReturn($relationMock);
+            ->method('hasMember')
+            ->with($user)
+            ->willReturn(true);
 
         $policy = new GroupPolicy;
 
@@ -74,22 +64,13 @@ class GroupPolicyTest extends TestCase
         $user = new User;
         $user->id = 2;
 
-        $relationMock = \Mockery::mock(BelongsToMany::class);
-        $relationMock->shouldReceive('where')
-            ->once()
-            ->with('user_id', $user->id)
-            ->andReturnSelf();
-
-        $relationMock->shouldReceive('exists')
-            ->once()
-            ->andReturn(false);
-
-        $groupMock = $this->createPartialMock(Group::class, ['members']);
+        $groupMock = $this->createPartialMock(Group::class, ['hasMember']);
         $groupMock->user_id = 1;
 
         $groupMock->expects($this->once())
-            ->method('members')
-            ->willReturn($relationMock);
+            ->method('hasMember')
+            ->with($user)
+            ->willReturn(false);
 
         $policy = new GroupPolicy;
 
