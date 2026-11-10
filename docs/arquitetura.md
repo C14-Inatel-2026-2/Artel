@@ -51,11 +51,23 @@ O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está 
 ### Divisão de despesa (`createExpense`)
 
 1. Se o grupo não tem participantes, lança `InvalidArgumentException` (o controller converte em HTTP 422).
-2. Cria a despesa e converte o valor para centavos: `round(amount * 100)`.
-3. Divide os centavos igualmente entre os participantes atuais. O resto da divisão é distribuído com 1 centavo a mais para os primeiros participantes da lista.
-4. Cria um registro em `expense_splits` para cada participante.
+2. Define o tipo de divisão (`split_type`, padrão `equal`) e converte o valor para centavos: `round(amount * 100)`.
+3. Calcula a parcela de cada pessoa, em centavos inteiros, conforme o tipo (tabela abaixo). Se a soma não fecha, lança `InvalidArgumentException` antes de gravar qualquer coisa.
+4. Em uma `DB::transaction`, cria a despesa (com `split_type`) e um registro em `expense_splits` para cada pessoa.
 
-Exemplo: R$ 10,00 entre 3 participantes gera parcelas de 3,34, 3,33 e 3,33.
+| Tipo | Quem entra | Cálculo |
+|---|---|---|
+| `equal` | `participants` ou, se ausente, todos os participantes do grupo | Divide os centavos igualmente. O resto da divisão vai como 1 centavo a mais para os primeiros da lista |
+| `exact` | Os usuários de `splits` | Usa o `amount` de cada parcela, e a soma precisa ser igual ao valor da despesa |
+| `percentage` | Os usuários de `splits` | Converte cada percentual em centésimos (a soma precisa ser 100,00%) e calcula `valor × percentual`, arredondando para baixo. Os centavos que sobram vão para quem tem o maior resto, e a soma fecha exatamente |
+
+Exemplos:
+
+- `equal`, R$ 10,00 entre 3 participantes: parcelas de 3,34, 3,33 e 3,33.
+- `exact`, R$ 100,00 com 70,00 e 30,00: parcelas de 70,00 e 30,00. Com 60,00 e 30,00, a requisição é recusada (HTTP 422).
+- `percentage`, R$ 10,00 com 33,34%, 33,33% e 33,33%: parcelas de 3,34, 3,33 e 3,33.
+
+A validação de formato e de pertencimento ao grupo (`participants` e `splits`) fica no `StoreExpenseRequest`. A conferência da soma de `exact` e `percentage` fica no `ExpenseService`, e o controller converte o erro em HTTP 422.
 
 ### Saldo (`calculateBalance`)
 
@@ -118,6 +130,7 @@ erDiagram
         string description
         decimal amount "10,2"
         bigint paid_by FK
+        string split_type "equal, exact ou percentage"
         bigint group_id FK
     }
     expense_splits {

@@ -25,4 +25,17 @@ class StoreExpenseRequestTest extends TestCase
         $this->assertContains('required', $rules['amount']);
         $this->assertContains('min:0.01', $rules['amount']);
     }
+
+    public function test_store_expense_request_contains_split_rules(): void
+    {
+        $rules = (new StoreExpenseRequest)->rules();
+
+        $this->assertArrayHasKey('split_type', $rules);
+        $this->assertArrayHasKey('participants', $rules);
+        $this->assertArrayHasKey('splits', $rules);
+        $this->assertArrayHasKey('splits.*.user_id', $rules);
+        $this->assertArrayHasKey('splits.*.amount', $rules);
+        $this->assertArrayHasKey('splits.*.percentage', $rules);
+        $this->assertContains('required_if:split_type,exact,percentage', $rules['splits']);
+    }
 }
