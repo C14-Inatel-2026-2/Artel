@@ -13,7 +13,7 @@ class LoginController extends Controller
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
 
         if (! Auth::attempt($credentials)) {
-            return back()->withErrors(['email' => 'Email ou senha errado']);
+            return back()->withErrors(['email' => 'Email ou senha errado'])->onlyInput('email');
         }
 
         return redirect('/');

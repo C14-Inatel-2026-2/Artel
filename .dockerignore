@@ -26,10 +26,6 @@ pint.json
 tests
 .editorconfig
 .gitattributes
-.npmrc
-package.json
-package-lock.json
-vite.config.js
 Homestead.json
 Homestead.yaml
 Thumbs.db
