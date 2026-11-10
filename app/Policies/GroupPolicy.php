@@ -21,7 +21,7 @@ class GroupPolicy
     public function view(User $user, Group $group): bool
     {
         return $group->user_id === $user->id
-            || $group->members()->where('user_id', $user->id)->exists();
+            || $group->hasMember($user);
     }
 
     /**
@@ -46,7 +46,7 @@ class GroupPolicy
     public function addMember(User $user, Group $group): bool
     {
         return $group->user_id === $user->id
-            || $group->members()->where('user_id', $user->id)->exists();
+            || $group->hasMember($user);
     }
 
     /**
