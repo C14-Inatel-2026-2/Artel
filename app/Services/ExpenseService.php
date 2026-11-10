@@ -10,6 +10,10 @@ use InvalidArgumentException;
 
 class ExpenseService
 {
+    public function __construct(
+        protected DebtSimplificationService $debtSimplification = new DebtSimplificationService,
+    ) {}
+
     public function createExpense(Group $group, array $data): Expense
     {
         $members = $group->members;
@@ -18,25 +22,23 @@ class ExpenseService
             throw new InvalidArgumentException('O grupo não possui participantes para divisão da despesa.');
         }
 
-        return DB::transaction(function () use ($group, $data, $members) {
+        $splitType = $data['split_type'] ?? 'equal';
+        $totalCents = (int) round($data['amount'] * 100);
+        $shares = $this->calculateShares($members->pluck('id')->all(), $totalCents, $splitType, $data);
+
+        return DB::transaction(function () use ($group, $data, $splitType, $shares) {
             $expense = Expense::create([
                 'description' => $data['description'],
                 'amount' => $data['amount'],
                 'paid_by' => $data['paid_by'],
+                'split_type' => $splitType,
                 'group_id' => $group->id,
             ]);
 
-            $totalCents = (int) round($data['amount'] * 100);
-            $count = $members->count();
-            $baseCents = intdiv($totalCents, $count);
-            $remainder = $totalCents % $count;
-
-            foreach ($members->values() as $index => $member) {
-                $cents = $baseCents + ($index < $remainder ? 1 : 0);
-
+            foreach ($shares as $userId => $cents) {
                 ExpenseSplit::create([
                     'expense_id' => $expense->id,
-                    'user_id' => $member->id,
+                    'user_id' => $userId,
                     'amount' => $cents / 100,
                 ]);
             }
@@ -66,7 +68,11 @@ class ExpenseService
                 ->whereHas('expense', fn ($q) => $q->where('group_id', $group->id))
                 ->sum('amount');
 
-            $netBalance = round($totalPaid - $totalOwed, 2);
+            // Acertos: quem pagou reduz a dívida (sobe o saldo); quem recebeu reduz o crédito (desce o saldo).
+            $totalSettledPaid = (float) $group->settlements()->where('paid_by', $member->id)->sum('amount');
+            $totalSettledReceived = (float) $group->settlements()->where('paid_to', $member->id)->sum('amount');
+
+            $netBalance = round($totalPaid - $totalOwed + $totalSettledPaid - $totalSettledReceived, 2);
 
             $status = match (true) {
                 $netBalance > 0 => 'a_receber',
@@ -93,6 +99,97 @@ class ExpenseService
             'total_expenses' => round((float) $group->expenses()->sum('amount'), 2),
             'expenses_count' => $group->expenses()->count(),
             'balances' => $balances,
+            'suggested_transfers' => $this->debtSimplification->suggestTransfers($balances),
         ];
+    }
+
+    private function calculateShares(array $memberIds, int $totalCents, string $splitType, array $data): array
+    {
+        return match ($splitType) {
+            'exact' => $this->exactShares($data['splits'], $totalCents),
+            'percentage' => $this->percentageShares($data['splits'], $totalCents),
+            default => $this->equalShares($data['participants'] ?? $memberIds, $totalCents),
+        };
+    }
+
+    private function equalShares(array $userIds, int $totalCents): array
+    {
+        $userIds = array_values($userIds);
+        $baseCents = intdiv($totalCents, count($userIds));
+        $remainder = $totalCents % count($userIds);
+        $shares = [];
+
+        foreach ($userIds as $index => $userId) {
+            $shares[$userId] = $baseCents + ($index < $remainder ? 1 : 0);
+        }
+
+        return $shares;
+    }
+
+    private function exactShares(array $splits, int $totalCents): array
+    {
+        $shares = [];
+
+        foreach ($splits as $split) {
+            $shares[$split['user_id']] = (int) round($split['amount'] * 100);
+        }
+
+        $sumCents = array_sum($shares);
+
+        if ($sumCents !== $totalCents) {
+            throw new InvalidArgumentException(sprintf(
+                'A soma das parcelas (R$ %s) é diferente do valor da despesa (R$ %s).',
+                $this->formatCents($sumCents),
+                $this->formatCents($totalCents),
+            ));
+        }
+
+        return $shares;
+    }
+
+    private function percentageShares(array $splits, int $totalCents): array
+    {
+        $hundredths = [];
+
+        foreach ($splits as $split) {
+            $hundredths[$split['user_id']] = (int) round($split['percentage'] * 100);
+        }
+
+        $sumHundredths = array_sum($hundredths);
+
+        if ($sumHundredths !== 10000) {
+            throw new InvalidArgumentException(sprintf(
+                'A soma dos percentuais (%s%%) deve ser exatamente 100%%.',
+                number_format($sumHundredths / 100, 2, ',', '.'),
+            ));
+        }
+
+        $shares = [];
+        $remainders = [];
+
+        foreach ($hundredths as $userId => $value) {
+            $product = $totalCents * $value;
+            $shares[$userId] = intdiv($product, 10000);
+            $remainders[$userId] = $product % 10000;
+        }
+
+        $leftoverCents = $totalCents - array_sum($shares);
+        arsort($remainders);
+
+        foreach (array_keys($remainders) as $userId) {
+            if ($leftoverCents <= 0) {
+                break;
+            }
+
+            $shares[$userId]++;
+            $leftoverCents--;
+        }
+
+        return $shares;
+    }
+
+    private function formatCents(int $cents): string
+    {
+        return number_format($cents / 100, 2, ',', '.');
     }
 }

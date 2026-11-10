@@ -30,6 +30,8 @@ class ProtectedRoutesTest extends TestCase
             'listar despesas' => ['GET', '/api/groups/1/expenses'],
             'criar despesa' => ['POST', '/api/groups/1/expenses'],
             'saldos do grupo' => ['GET', '/api/groups/1/balances'],
+            'listar quitações' => ['GET', '/api/groups/1/settlements'],
+            'registrar quitação' => ['POST', '/api/groups/1/settlements'],
             'detalhar despesa' => ['GET', '/api/expenses/1'],
             'excluir despesa' => ['DELETE', '/api/expenses/1'],
         ];

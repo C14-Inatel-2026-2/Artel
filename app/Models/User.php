@@ -64,4 +64,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(ExpenseSplit::class);
     }
+
+    /**
+     * Acertos pagos pelo usuário.
+     */
+    public function settlementsPaid(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'paid_by');
+    }
+
+    /**
+     * Acertos recebidos pelo usuário.
+     */
+    public function settlementsReceived(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'paid_to');
+    }
 }

@@ -41,6 +41,8 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 | GET | `/api/groups/{group}/expenses` | `ExpenseController@index` | Lista as despesas do grupo | Participante |
 | POST | `/api/groups/{group}/expenses` | `ExpenseController@store` | Registra uma despesa | Participante |
 | GET | `/api/groups/{group}/balances` | `GroupBalanceController@index` | Saldos do grupo | Participante |
+| GET | `/api/groups/{group}/settlements` | `SettlementController@index` | Histórico de quitações do grupo | Participante |
+| POST | `/api/groups/{group}/settlements` | `SettlementController@store` | Registra uma quitação entre dois participantes | Participante |
 | GET | `/api/expenses/{expense}` | `ExpenseController@show` | Detalha uma despesa | Participante do grupo da despesa |
 | DELETE | `/api/expenses/{expense}` | `ExpenseController@destroy` | Exclui uma despesa | Participante do grupo da despesa |
 
@@ -52,7 +54,7 @@ As regras ficam em `App\Policies\GroupPolicy`:
 
 | Regra | Quem é autorizado | Onde é aplicada |
 |---|---|---|
-| `view` | Dono ou participante | `GroupController@show`, `GroupMemberController@index` e `@destroy`, `ExpenseController@index`, `@show` e `@destroy`, `GroupBalanceController@index`, `StoreExpenseRequest` |
+| `view` | Dono ou participante | `GroupController@show`, `GroupMemberController@index` e `@destroy`, `ExpenseController@index`, `@show` e `@destroy`, `GroupBalanceController@index`, `SettlementController@index`, `StoreExpenseRequest`, `StoreSettlementRequest` |
 | `update` | Dono | `UpdateGroupRequest` |
 | `delete` | Dono | `GroupController@destroy` |
 | `addMember` | Dono ou participante | `AddGroupMemberRequest` |
@@ -211,17 +213,44 @@ Adiciona um usuário existente ao grupo. Informe `email` **ou** `user_id`. Se am
 
 ### `POST /api/groups/{group}/expenses`
 
-Registra uma despesa e a divide igualmente entre os participantes atuais do grupo (veja [regras de divisão](arquitetura.md#divisao-de-despesa-createexpense)).
+Registra uma despesa e a divide entre os participantes do grupo, de forma igualitária, por valores exatos ou por percentuais (veja [regras de divisão](arquitetura.md#divisao-de-despesa-createexpense)).
 
 | Campo | Regras (`StoreExpenseRequest`) |
 |---|---|
 | `description` | obrigatório, string, 3–255 caracteres |
 | `amount` | obrigatório, numérico, mínimo `0.01` |
 | `paid_by` | obrigatório, inteiro, deve existir em `users.id` **e** ser participante do grupo |
+| `split_type` | opcional: `equal` (padrão), `exact` ou `percentage` |
+| `participants` | opcional, usado só em `equal`: lista de ids de usuários, todos participantes do grupo e sem repetição. Sem ela, a divisão é entre todos os participantes |
+| `splits` | obrigatório em `exact` e `percentage`: lista com pelo menos uma parcela |
+| `splits[].user_id` | obrigatório, inteiro, sem repetição, deve existir em `users.id` **e** ser participante do grupo |
+| `splits[].amount` | obrigatório em `exact`, numérico, mínimo `0.01` |
+| `splits[].percentage` | obrigatório em `percentage`, numérico, de `0.01` a `100` |
 
-- **201**: despesa criada, com `payer` e `splits`.
+`participants` é ignorado em `exact` e `percentage`, e `splits` é ignorado em `equal`, mas os `user_id` de ambos são sempre conferidos contra o grupo.
+
+Exemplos de corpo:
+
+```json
+{"description": "Jantar", "amount": 100, "paid_by": 1, "split_type": "equal", "participants": [2, 3]}
+```
+
+```json
+{"description": "Jantar", "amount": 100, "paid_by": 1, "split_type": "exact",
+ "splits": [{"user_id": 1, "amount": 70}, {"user_id": 2, "amount": 30}]}
+```
+
+```json
+{"description": "Jantar", "amount": 100, "paid_by": 1, "split_type": "percentage",
+ "splits": [{"user_id": 1, "percentage": 60}, {"user_id": 2, "percentage": 40}]}
+```
+
+- **201**: despesa criada, com `split_type`, `payer` e `splits`.
 - **403**: o usuário não participa do grupo.
-- **422**: erro de validação (por exemplo, `paid_by`: "O pagador deve ser um participante do grupo.") ou `{"message": "O grupo não possui participantes para divisão da despesa."}`.
+- **422**: erro de validação, com os campos em `errors` (por exemplo, `paid_by`: "O pagador deve ser um participante do grupo." ou `splits.1.user_id`: "O usuário da parcela deve pertencer ao grupo."), ou uma regra de negócio em `message`:
+    - `{"message": "O grupo não possui participantes para divisão da despesa."}`
+    - `{"message": "A soma das parcelas (R$ 90,00) é diferente do valor da despesa (R$ 100,00)."}` (`exact`)
+    - `{"message": "A soma dos percentuais (99,00%) deve ser exatamente 100%."}` (`percentage`)
 
 ### `GET /api/expenses/{expense}`
 
@@ -257,13 +286,51 @@ Remove as parcelas e a despesa (em uma transação).
           "net_balance": 0.0,
           "status": "a_receber | a_pagar | quitado"
         }
+      ],
+      "suggested_transfers": [
+        {
+          "from": { "id": 0, "name": "...", "email": "..." },
+          "to": { "id": 0, "name": "...", "email": "..." },
+          "amount": 0.0
+        }
       ]
     }
     ```
 
     Os valores acima indicam apenas a estrutura e os tipos retornados por `ExpenseService::calculateBalance`. Não são uma resposta real.
 
+    O `net_balance` já incorpora as quitações do grupo: cada acerto aumenta o saldo de quem pagou (`paid_by`) e diminui o de quem recebeu (`paid_to`).
+
+    `suggested_transfers` é a sugestão mínima de PIX/transferências para zerar os saldos (veja [simplificação](arquitetura.md#simplificacao-de-dividas-debtsimplificationservicesuggesttransfers)). Membros `quitado` não aparecem; se todos estiverem quitados, a lista é `[]`.
+
 - **403**: o usuário não participa do grupo.
+
+---
+
+## Quitações
+
+### `GET /api/groups/{group}/settlements`
+
+Lista o histórico de acertos do grupo, do mais recente para o mais antigo (`settled_at`, depois `id`).
+
+- **200**: array de quitações, cada uma com `payer` e `payee` (`id`, `name`, `email`).
+- **403**: o usuário não participa do grupo.
+
+### `POST /api/groups/{group}/settlements`
+
+Registra uma quitação (total ou parcial) entre dois participantes do mesmo grupo. O campo `settled_at` é preenchido automaticamente com a data/hora do registro.
+
+| Campo | Regras (`StoreSettlementRequest`) |
+|---|---|
+| `payer_id` | obrigatório, inteiro, deve existir em `users.id`, ser participante do grupo e diferente de `payee_id` |
+| `payee_id` | obrigatório, inteiro, deve existir em `users.id` e ser participante do grupo |
+| `amount` | obrigatório, numérico, mínimo `0.01` |
+
+No banco, `payer_id` é persistido como `paid_by` e `payee_id` como `paid_to`.
+
+- **201**: quitação criada, com `payer` e `payee`.
+- **403**: o usuário não participa do grupo.
+- **422**: erro de validação (mesmo usuário nos dois lados, alguém fora do grupo, valor inválido etc.).
 
 ---
 
@@ -271,12 +338,16 @@ Remove as parcelas e a despesa (em uma transação).
 
 Definidas em `routes/user.php` e incluídas por `routes/web.php`. **Não** ficam sob `/api`: usam o grupo de middleware `web` (sessão e verificação de token CSRF) e respondem com **redirecionamento**, não com JSON.
 
-As validações são as mesmas dos endpoints de [autenticação da API](#autenticacao), com os mesmos Form Requests.
+As validações são as mesmas dos endpoints de [autenticação da API](#autenticacao), com os mesmos Form Requests. Todas as rotas abaixo usam o middleware `guest`: um usuário já autenticado é redirecionado.
+
+### `GET /login` e `GET /register`
+
+Exibem as telas de login e cadastro (`resources/views/auth/`), que enviam os formulários para as rotas abaixo.
 
 ### `POST /user/register`
 
-Valida com `RegisterRequest`, cria o usuário (senha com hash) e redireciona para `/`. Não autentica o usuário criado.
+Valida com `RegisterRequest`, cria o usuário (senha com hash) e redireciona para `/login` com a mensagem "Conta criada. Entre para continuar.". Não autentica o usuário criado.
 
 ### `POST /user/login`
 
-Valida com `LoginRequest`. Em caso de sucesso, autentica por sessão e redireciona para `/`. Em caso de falha, volta à página anterior com o erro `email`: "Email ou senha errado".
+Valida com `LoginRequest`. Em caso de sucesso, autentica por sessão e redireciona para `/`. Em caso de falha, volta à página anterior com o erro `email`: "Email ou senha errado", mantendo o e-mail digitado.

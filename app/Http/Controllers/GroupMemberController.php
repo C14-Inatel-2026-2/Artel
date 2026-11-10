@@ -32,7 +32,7 @@ class GroupMemberController extends Controller
             ? User::findOrFail($request->integer('user_id'))
             : User::where('email', $request->string('email'))->firstOrFail();
 
-        if ($group->members()->where('users.id', $user->id)->exists()) {
+        if ($group->hasMember($user)) {
             return response()->json([
                 'message' => 'Este usuário já faz parte do grupo.',
             ], 422);
@@ -66,7 +66,7 @@ class GroupMemberController extends Controller
 
         $this->authorize('removeMember', [$group, $user]);
 
-        if (! $group->members()->where('users.id', $user->id)->exists()) {
+        if (! $group->hasMember($user)) {
             return response()->json([
                 'message' => 'Este usuário não é participante deste grupo.',
             ], 404);

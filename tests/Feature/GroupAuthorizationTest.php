@@ -62,6 +62,8 @@ class GroupAuthorizationTest extends TestCase
             'listar despesas' => ['GET', '/api/groups/{group}/expenses'],
             'criar despesa' => ['POST', '/api/groups/{group}/expenses'],
             'saldos do grupo' => ['GET', '/api/groups/{group}/balances'],
+            'listar quitações' => ['GET', '/api/groups/{group}/settlements'],
+            'registrar quitação' => ['POST', '/api/groups/{group}/settlements'],
             'detalhar despesa' => ['GET', '/api/expenses/{expense}'],
             'excluir despesa' => ['DELETE', '/api/expenses/{expense}'],
         ];
@@ -118,6 +120,30 @@ class GroupAuthorizationTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_stranger_cannot_register_settlement(): void
+    {
+        Sanctum::actingAs($this->stranger);
+
+        $this->postJson("/api/groups/{$this->group->id}/settlements", [
+            'payer_id' => $this->member->id,
+            'payee_id' => $this->owner->id,
+            'amount' => 10,
+        ])->assertForbidden();
+
+        $this->assertDatabaseCount('settlements', 0);
+    }
+
+    public function test_member_can_register_settlement(): void
+    {
+        Sanctum::actingAs($this->member);
+
+        $this->postJson("/api/groups/{$this->group->id}/settlements", [
+            'payer_id' => $this->member->id,
+            'payee_id' => $this->owner->id,
+            'amount' => 10,
+        ])->assertCreated();
+    }
+
     public function test_member_can_view_group_members_expenses_and_balances(): void
     {
         Sanctum::actingAs($this->member);
@@ -126,6 +152,7 @@ class GroupAuthorizationTest extends TestCase
         $this->getJson("/api/groups/{$this->group->id}/members")->assertOk()->assertJsonCount(3);
         $this->getJson("/api/groups/{$this->group->id}/expenses")->assertOk()->assertJsonCount(1);
         $this->getJson("/api/groups/{$this->group->id}/balances")->assertOk();
+        $this->getJson("/api/groups/{$this->group->id}/settlements")->assertOk();
         $this->getJson("/api/expenses/{$this->expense->id}")->assertOk();
     }
 

@@ -28,10 +28,28 @@ class Group extends Model
     }
 
     /**
+     * Verifica se o usuário informado é participante do grupo.
+     */
+    public function hasMember(int|User $user): bool
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        return $this->members()->where('users.id', $userId)->exists();
+    }
+
+    /**
      * Despesas do grupo.
      */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    /**
+     * Quitações (acertos) registradas no grupo.
+     */
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class);
     }
 }

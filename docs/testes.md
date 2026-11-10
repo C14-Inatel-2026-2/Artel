@@ -39,15 +39,16 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/GroupBalanceControllerTest.php` | `index` com service e `Gate` mockados: retorno 200, propagação de exceção e saldo não calculado quando a autorização falha |
 | `Unit/GroupControllerTest.php` | `destroy` com `Gate` mockado: resposta de sucesso, propagação de exceção e grupo não excluído quando a autorização falha |
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
-| `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias e valor mínimo de `StoreExpenseRequest` |
+| `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias, valor mínimo e regras de divisão (`split_type`, `participants`, `splits`) de `StoreExpenseRequest` |
 | `Unit/StoreGroupRequestTest.php` | Regras de `StoreGroupRequest` e falha com nome curto |
 | `Unit/RegisterRequestTest.php` | Regras e mensagens de `RegisterRequest`: e-mail duplicado e confirmação de senha |
 | `Unit/LoginRequestTest.php` | Regras e mensagens de `LoginRequest` e o método `credentials()` |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
 | `Feature/AuthTest.php` | Endpoints `/api/auth/*`: cadastro, login (sucesso, 401 e limite de tentativas), `me` e revogação do token no logout |
-| `Feature/GroupAuthorizationTest.php` | Permissões de anônimo, dono, participante e estranho em grupos, participantes, despesas e saldos: 401 sem token, 403 consistente, 403 antes do 422 e remoção do dono bloqueada com 422 |
+| `Feature/GroupAuthorizationTest.php` | Permissões de anônimo, dono, participante e estranho em grupos, participantes, despesas, saldos e quitações: 401 sem token, 403 consistente, 403 antes do 422 e remoção do dono bloqueada com 422 |
 | `Feature/ProtectedRoutesTest.php` | 401 em todas as rotas protegidas sem token ou com token inválido, e uso do usuário autenticado em `GET` e `POST /api/groups` |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
+| `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |
 
 ## Cobertura
 
@@ -59,6 +60,6 @@ php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 
 ## Limitações conhecidas
 
-- **Poucos testes de feature de regra de negócio.** A autenticação e a autorização são exercitadas via HTTP, mas o conteúdo das respostas dos demais endpoints é testado apenas com testes unitários e mocks.
-- **Regras centrais sem teste:** a divisão em centavos (`createExpense`) e o cálculo de saldo (`calculateBalance`) não têm testes com banco de dados.
+- **Cobertura de feature concentrada em alguns fluxos.** Autenticação, autorização, divisão personalizada (`ExpenseSplitTest`), quitações e simplificação são exercitadas via HTTP; os demais endpoints são testados apenas com testes unitários e mocks.
+- **Regras centrais com cobertura parcial:** a divisão em centavos (`createExpense`) tem testes com banco de dados em `ExpenseSplitTest`, mas o cálculo de saldo (`calculateBalance`) só é exercitado de forma indireta.
 - **`ExampleTest`** do skeleton Laravel ainda está presente nas duas suítes.
