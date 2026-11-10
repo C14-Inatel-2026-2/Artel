@@ -1,3 +1,13 @@
+FROM node:22-alpine AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json .npmrc vite.config.js ./
+RUN npm ci
+
+COPY resources ./resources
+RUN npm run build
+
 FROM php:8.4-apache
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
@@ -28,6 +38,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY . .
+COPY --from=assets /app/public/build ./public/build
 
 RUN composer install \
         --no-dev \

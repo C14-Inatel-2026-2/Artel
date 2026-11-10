@@ -11,7 +11,7 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D3 | **API REST com respostas JSON** sob `/api`, com exceções renderizadas como JSON para `api/*` | `routes/api.php`, `bootstrap/app.php` |
 | D4 | **Validação em Form Requests**, com mensagens em português | `app/Http/Requests/` |
 | D5 | **Regra de negócio de despesas em uma camada de serviço** (`ExpenseService`), injetada nos controllers | `app/Services/ExpenseService.php`, `ExpenseController`, `GroupBalanceController` |
-| D6 | **Divisão igualitária com aritmética em centavos**: o resto é distribuído 1 centavo por participante, e as parcelas são persistidas em `expense_splits` | `ExpenseService::createExpense` |
+| D6 | **Divisão de despesas em três tipos (`equal`, `exact` e `percentage`) com aritmética em centavos**: em `equal` o resto é distribuído 1 centavo por participante, em `percentage` ele vai para quem tem o maior resto, e as parcelas são persistidas em `expense_splits` | `ExpenseService::createExpense`, `StoreExpenseRequest`, coluna `expenses.split_type` |
 | D7 | **Exclusão em cascata** via chaves estrangeiras | migrations em `database/migrations/2024_*` |
 | D8 | **O criador do grupo é participante automático e não pode ser removido** | `GroupController::store`, `GroupMemberController::destroy` |
 | D9 | **Testes com PHPUnit + Mockery** | `composer.json`, `phpunit.xml`, `tests/` |
@@ -26,6 +26,5 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. **Urgente** enquanto a demo pública estiver no ar. |
 | P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. |
 | P3 | **Fluxo de cadastro/login**: rotas web com sessão ou endpoints de API | As rotas atuais estão no grupo `web` e redirecionam. |
-| P5 | **Tipos de divisão além da igualitária** | Não implementado. |
 | P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
 | P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`) (veja [CI/CD e deploy](ci-cd.md)). Falta registrar as evidências do Jenkins ([#29](https://github.com/C14-Inatel-2026-2/Artel/issues/29)). |
