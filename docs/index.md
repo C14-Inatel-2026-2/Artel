@@ -11,7 +11,7 @@ O **Artel** é uma aplicação de divisão de despesas em grupo, desenvolvida co
 |---|---|
 | Grupos | Listar, criar, exibir, renomear e excluir grupos. O criador é adicionado automaticamente como participante. |
 | Participantes | Listar, adicionar (por `email` ou `user_id`) e remover participantes. O criador do grupo não pode ser removido. |
-| Despesas | Listar despesas do grupo, registrar, exibir e excluir despesas. |
+| Despesas | Listar despesas do grupo, registrar, exibir, editar e excluir despesas. |
 | Divisão | Cada despesa pode ser dividida **igualmente** (entre todos os participantes ou só entre os escolhidos), por **valores exatos** ou por **percentuais**, sempre com tratamento de centavos: a soma das parcelas é igual ao valor da despesa. |
 | Saldos | Cálculo de total pago, total devido, saldo líquido e status (`a_receber`, `a_pagar`, `quitado`) por participante. |
 | Simplificação | Sugestão de transferências (`suggested_transfers`) que minimiza o número de PIX entre participantes com base nos saldos líquidos. |
@@ -24,7 +24,6 @@ Detalhes de cada endpoint estão em [API](api.md).
 
 - **Sem autenticação na API:** as rotas de `routes/api.php` não usam middleware de autenticação. Quando não há usuário autenticado, `GroupController` usa o **primeiro usuário do banco** (`User::first()`) como usuário atual.
 - **Sem autorização aplicada:** existe a classe `App\Policies\GroupPolicy`, mas ela não é chamada por nenhum controller ou Form Request. Todos os `authorize()` dos Form Requests retornam `true`.
-- **Sem edição de despesas:** não existe rota de atualização de despesa.
 - **Cadastro/login fora da API:** as rotas de usuário estão no grupo `web` (sessão e proteção CSRF) e respondem com redirecionamento, não com JSON.
 
 ## Tecnologias

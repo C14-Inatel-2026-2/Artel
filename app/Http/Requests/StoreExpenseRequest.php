@@ -67,9 +67,9 @@ class StoreExpenseRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $group = $this->route('group');
+            $group = $this->group();
 
-            if (! $group instanceof Group) {
+            if ($group === null) {
                 return;
             }
 
@@ -93,5 +93,12 @@ class StoreExpenseRequest extends FormRequest
                 }
             }
         });
+    }
+
+    protected function group(): ?Group
+    {
+        $group = $this->route('group');
+
+        return $group instanceof Group ? $group : null;
     }
 }

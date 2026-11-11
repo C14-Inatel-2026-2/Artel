@@ -18,6 +18,7 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D10 | **Documentação técnica em MkDocs + Material**, com dependências Python isoladas em `requirements-docs.txt` | `mkdocs.yml`, `requirements-docs.txt` |
 | D11 | **Demo hospedada no Fly.io** (Docker Apache + SQLite em volume), app `artel-c14` | `fly.toml`, `docker/entrypoint.sh`, `Dockerfile`. URL: `https://artel-c14.fly.dev`. |
 | D12 | **Interface web em Blade + Tailwind CSS (Vite)**, servida pelo próprio Laravel junto com a API | `package.json`, `vite.config.js`. Planejada na US06 ([#42](https://github.com/C14-Inatel-2026-2/Artel/issues/42)); hoje existe apenas a view `welcome`. |
+| D13 | **Edição de despesa por substituição completa** (`PUT /api/expenses/{expense}`), com recálculo das parcelas em transação; só participantes do grupo da despesa podem editar | `ExpenseService::updateExpense`, `UpdateExpenseRequest`, `ExpenseController::update` |
 
 ## Pendentes
 
@@ -26,5 +27,5 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | P1 | **Mecanismo de autenticação da API** | Não implementado. Os controllers usam `User::first()` como alternativa quando não há usuário autenticado. **Urgente** enquanto a demo pública estiver no ar. |
 | P2 | **Aplicação da autorização** (`GroupPolicy`) | A policy existe e tem testes unitários, mas não é chamada em nenhum ponto. Os Form Requests autorizam tudo. |
 | P3 | **Fluxo de cadastro/login**: rotas web com sessão ou endpoints de API | As rotas atuais estão no grupo `web` e redirecionam. |
-| P6 | **Edição de despesas e recálculo de parcelas** | Não implementado. Também está indefinido o que fazer com as parcelas quando a composição do grupo muda. |
+| P6 | **Parcelas e composição do grupo** | A edição recalcula as parcelas com os participantes atuais, e as despesas não editadas não mudam quando alguém entra ou sai do grupo. Falta definir se a edição de uma despesa `equal` sem `participants` deveria manter os participantes originais. |
 | P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`) (veja [CI/CD e deploy](ci-cd.md)). Falta registrar as evidências do Jenkins ([#29](https://github.com/C14-Inatel-2026-2/Artel/issues/29)). |

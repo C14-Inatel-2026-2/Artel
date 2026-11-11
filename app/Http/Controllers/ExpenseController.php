@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Models\Group;
 use App\Services\ExpenseService;
@@ -47,6 +48,19 @@ class ExpenseController extends Controller
         ]);
 
         return response()->json($expense, 200);
+    }
+
+    public function update(UpdateExpenseRequest $request, Expense $expense): JsonResponse
+    {
+        try {
+            $updated = $this->expenseService->updateExpense($expense, $request->validated());
+
+            return response()->json($updated, 200);
+        } catch (InvalidArgumentException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function destroy(Expense $expense): JsonResponse

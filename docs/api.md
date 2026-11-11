@@ -172,6 +172,19 @@ Exemplos de corpo:
 
 - **200**: despesa com `group` (`id`, `name`), `payer` e `splits` (cada parcela com `user`).
 
+### `PUT /api/expenses/{expense}`
+
+Edita uma despesa já lançada. É uma **substituição completa**: o corpo tem os mesmos campos e regras do `POST /api/groups/{group}/expenses`, então `description`, `amount` e `paid_by` são obrigatórios e `split_type`, `participants` e `splits` seguem as regras de divisão. Se `split_type` não vier, a divisão volta para `equal`.
+
+O grupo é o da própria despesa, e a divisão `equal` sem `participants` usa os participantes **atuais** do grupo. A despesa e todas as suas parcelas são atualizadas em uma única transação: as parcelas antigas são removidas e as novas gravadas, então os saldos refletem a edição imediatamente.
+
+Só participantes do grupo da despesa podem editá-la.
+
+- **200**: despesa atualizada, com `split_type`, `payer` e `splits`.
+- **403**: o usuário não participa do grupo da despesa (a checagem vem antes da validação).
+- **404**: despesa inexistente.
+- **422**: os mesmos erros do `POST` (erros por campo ou `message` com a soma que não fecha). Nada é alterado.
+
 ### `DELETE /api/expenses/{expense}`
 
 Remove as parcelas e a despesa (em uma transação).

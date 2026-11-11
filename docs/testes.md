@@ -44,6 +44,7 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
 | `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |
+| `Feature/ExpenseUpdateTest.php` | `PUT /api/expenses/{expense}` com banco em memória: atualização completa da despesa e das parcelas, troca entre `equal`, `exact` e `percentage`, saldos sem resíduos das parcelas antigas, 422 sem alterar nada (valor inválido, pagador ou usuários fora do grupo, soma que não fecha, corpo vazio), 403 para quem não participa do grupo (com prioridade sobre a validação) e 404 |
 
 ## Cobertura
 
