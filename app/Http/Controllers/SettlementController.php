@@ -4,43 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSettlementRequest;
 use App\Models\Group;
-use App\Models\Settlement;
+use App\Services\SettlementService;
 use Illuminate\Http\JsonResponse;
 
 class SettlementController extends Controller
 {
-    /**
-     * Lista o histórico de quitações do grupo.
-     */
-    public function index(Group $group): JsonResponse
-    {
-        $this->authorize('view', $group);
+    public function __construct(
+        protected SettlementService $settlementService = new SettlementService,
+    ) {}
 
-        $settlements = $group->settlements()
-            ->with(['payer:id,name,email', 'payee:id,name,email'])
-            ->latest('settled_at')
-            ->latest('id')
-            ->get();
-
-        return response()->json($settlements, 200);
-    }
+     public function index(Group $group): JsonResponse
+  {
+      $this->authorize('view', $group);
+      return response()->json($this->settlementService->listForGroup($group), 200);
+  }
 
     /**
      * Registra uma quitação (total ou parcial) entre dois participantes.
      */
     public function store(StoreSettlementRequest $request, Group $group): JsonResponse
     {
-        $data = $request->validated();
-
-        $settlement = Settlement::create([
-            'group_id' => $group->id,
-            'paid_by' => $data['payer_id'],
-            'paid_to' => $data['payee_id'],
-            'amount' => $data['amount'],
-            'settled_at' => now(),
-        ]);
-
-        $settlement->load(['payer:id,name,email', 'payee:id,name,email']);
+        $settlement = $this->settlementService->create($group, $request->validated());
 
         return response()->json($settlement, 201);
     }

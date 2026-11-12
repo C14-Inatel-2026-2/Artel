@@ -41,6 +41,8 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
 | `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias, valor mínimo e regras de divisão (`split_type`, `participants`, `splits`) de `StoreExpenseRequest` |
 | `Unit/StoreGroupRequestTest.php` | Regras de `StoreGroupRequest` e falha com nome curto |
+| `Unit/SettlementServiceTest.php` | Criação e listagem de quitações via `SettlementService` (banco em memória) |
+| `Unit/DebtSimplificationServiceTest.php` | Simplificação de dívidas: cadeia colapsada, lista vazia e conservação de saldos |
 | `Unit/RegisterRequestTest.php` | Regras e mensagens de `RegisterRequest`: e-mail duplicado e confirmação de senha |
 | `Unit/LoginRequestTest.php` | Regras e mensagens de `LoginRequest` e o método `credentials()` |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
