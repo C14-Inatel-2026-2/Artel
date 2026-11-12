@@ -29,7 +29,8 @@ app/
 ├── Models/                             # Eloquent: User, Group, Expense, ExpenseSplit, Settlement
 ├── Policies/GroupPolicy.php            # Regras de autorização por grupo
 └── Services/
-    ├── ExpenseService.php              # Divisão de despesas e cálculo de saldos
+    ├── ExpenseService.php              # Orquestra despesas/saldos; delega splits às strategies
+    ├── ExpenseSplits/                  # Strategies equal/exact/percentage + factory
     ├── SettlementService.php           # Listagem e registro de quitações
     └── DebtSimplificationService.php   # Sugestão mínima de transferências (centavos)
 routes/
@@ -47,7 +48,7 @@ O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está 
 | Rotas | Mapear URL e método HTTP para o controller | Usam *route model binding* (`{group}`, `{expense}`, `{user}`): um ID inexistente resulta em 404. Exceto `register` e `login`, exigem `auth:sanctum`, que é verificado antes do binding (sem token, a resposta é 401 mesmo para IDs inexistentes). |
 | Form Requests | Validar a entrada e definir mensagens em português | `UpdateGroupRequest`, `AddGroupMemberRequest`, `StoreExpenseRequest`, `UpdateExpenseRequest` e `StoreSettlementRequest` consultam a `GroupPolicy` no `authorize()`; os demais retornam `true`. `StoreExpenseRequest` (herdado por `UpdateExpenseRequest`) e `StoreSettlementRequest` também verificam se os usuários envolvidos participam do grupo. |
 | Controllers | Orquestrar a requisição e montar a resposta JSON | `GroupController` e `GroupMemberController` acessam os models diretamente. `ExpenseController` e `GroupBalanceController` delegam ao `ExpenseService`; `SettlementController` delega ao `SettlementService`. |
-| Service | Regra de negócio de despesas, quitações e simplificação | `ExpenseService` (`createExpense`, `updateExpense`, `deleteExpense`, `calculateBalance`, com acertos de `settlements`), `SettlementService` (`listForGroup`, `create`) e `DebtSimplificationService` (`suggestTransfers`, com `partitionBalances` + `matchTransfers`). As operações de escrita usam `DB::transaction` quando necessário. |
+| Service | Regra de negócio de despesas, quitações e simplificação | `ExpenseService` (`createExpense`, `updateExpense`, `deleteExpense`, `calculateBalance`, com acertos de `settlements`) usa `ExpenseSplitStrategyFactory` para equal/exact/percentage; `SettlementService` (`listForGroup`, `create`) e `DebtSimplificationService` (`suggestTransfers`, com `partitionBalances` + `matchTransfers`). As operações de escrita usam `DB::transaction` quando necessário. |
 | Models | Mapeamento das tabelas e relacionamentos | Eloquent. As respostas JSON são os próprios models serializados (não há API Resources). |
 | Policy | Regras de autorização para grupos | `GroupPolicy` define `viewAny`, `view`, `update`, `delete`, `addMember` e `removeMember`. É aplicada com `$this->authorize()` nos controllers (trait `AuthorizesRequests` no `Controller` base) e no `authorize()` dos Form Requests de escrita. Despesas, saldos e quitações usam a regra `view` do grupo. Veja [Permissões](api.md#permissoes). |
 
@@ -72,7 +73,7 @@ Exemplos:
 - `exact`, R$ 100,00 com 70,00 e 30,00: parcelas de 70,00 e 30,00. Com 60,00 e 30,00, a requisição é recusada (HTTP 422).
 - `percentage`, R$ 10,00 com 33,34%, 33,33% e 33,33%: parcelas de 3,34, 3,33 e 3,33.
 
-A validação de formato e de pertencimento ao grupo (`participants` e `splits`) fica no `StoreExpenseRequest`. A conferência da soma de `exact` e `percentage` fica no `ExpenseService`, e o controller converte o erro em HTTP 422.
+A validação de formato e de pertencimento ao grupo (`participants` e `splits`) fica no `StoreExpenseRequest`. A conferência da soma de `exact` e `percentage` fica nas strategies de split (`ExactSplitStrategy` / `PercentageSplitStrategy`), e o controller converte o erro em HTTP 422.
 
 ### Edição de despesa (`updateExpense`)
 
