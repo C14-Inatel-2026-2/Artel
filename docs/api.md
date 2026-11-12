@@ -44,6 +44,7 @@ Base: `http://localhost:8000/api` (prefixo `/api` aplicado pelo Laravel às rota
 | GET | `/api/groups/{group}/settlements` | `SettlementController@index` | Histórico de quitações do grupo | Participante |
 | POST | `/api/groups/{group}/settlements` | `SettlementController@store` | Registra uma quitação entre dois participantes | Participante |
 | GET | `/api/expenses/{expense}` | `ExpenseController@show` | Detalha uma despesa | Participante do grupo da despesa |
+| PUT | `/api/expenses/{expense}` | `ExpenseController@update` | Edita uma despesa e recalcula as parcelas | Participante do grupo da despesa |
 | DELETE | `/api/expenses/{expense}` | `ExpenseController@destroy` | Exclui uma despesa | Participante do grupo da despesa |
 
 A lista corresponde à saída de `php artisan route:list --except-vendor`. Exceto `register` e `login`, todas as rotas exigem autenticação (`auth:sanctum`). "Participante" inclui o dono do grupo.
@@ -54,7 +55,7 @@ As regras ficam em `App\Policies\GroupPolicy`:
 
 | Regra | Quem é autorizado | Onde é aplicada |
 |---|---|---|
-| `view` | Dono ou participante | `GroupController@show`, `GroupMemberController@index` e `@destroy`, `ExpenseController@index`, `@show` e `@destroy`, `GroupBalanceController@index`, `SettlementController@index`, `StoreExpenseRequest`, `StoreSettlementRequest` |
+| `view` | Dono ou participante | `GroupController@show`, `GroupMemberController@index` e `@destroy`, `ExpenseController@index`, `@show` e `@destroy`, `GroupBalanceController@index`, `SettlementController@index`, `StoreExpenseRequest`, `UpdateExpenseRequest`, `StoreSettlementRequest` |
 | `update` | Dono | `UpdateGroupRequest` |
 | `delete` | Dono | `GroupController@destroy` |
 | `addMember` | Dono ou participante | `AddGroupMemberRequest` |
@@ -256,6 +257,19 @@ Exemplos de corpo:
 
 - **200**: despesa com `group` (`id`, `name`), `payer` e `splits` (cada parcela com `user`).
 - **403**: o usuário não participa do grupo da despesa.
+
+### `PUT /api/expenses/{expense}`
+
+Edita uma despesa já lançada. É uma **substituição completa**: o corpo tem os mesmos campos e regras do `POST /api/groups/{group}/expenses`, então `description`, `amount` e `paid_by` são obrigatórios e `split_type`, `participants` e `splits` seguem as regras de divisão. Se `split_type` não vier, a divisão volta para `equal`.
+
+O grupo é o da própria despesa, e a divisão `equal` sem `participants` usa os participantes **atuais** do grupo. A despesa e todas as suas parcelas são atualizadas em uma única transação: as parcelas antigas são removidas e as novas gravadas, então os saldos refletem a edição imediatamente.
+
+Só participantes do grupo da despesa podem editá-la.
+
+- **200**: despesa atualizada, com `split_type`, `payer` e `splits`.
+- **403**: o usuário não participa do grupo da despesa (a checagem vem antes da validação).
+- **404**: despesa inexistente.
+- **422**: os mesmos erros do `POST` (erros por campo ou `message` com a soma que não fecha). Nada é alterado.
 
 ### `DELETE /api/expenses/{expense}`
 

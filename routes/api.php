@@ -51,5 +51,6 @@ Route::middleware('auth:sanctum')->prefix('groups')->name('groups.')->group(func
 
 Route::middleware('auth:sanctum')->prefix('expenses')->name('expenses.')->group(function () {
     Route::get('/{expense}', [ExpenseController::class, 'show'])->name('show');
+    Route::put('/{expense}', [ExpenseController::class, 'update'])->name('update');
     Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
 });
