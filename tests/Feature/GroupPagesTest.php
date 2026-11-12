@@ -767,6 +767,17 @@ class GroupPagesTest extends TestCase
             ->assertSessionHasErrors(['email' => 'Informe um e-mail válido.']);
     }
 
+    public function test_listagem_mostra_a_inicial_e_o_nome_de_quem_esta_logado_antes_de_meus_grupos(): void
+    {
+        $ana = User::factory()->create(['name' => 'Ana Teste']);
+
+        $html = $this->actingAs($ana)->get('/groups')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/rounded-full[^>]*>\s*A\s*<\/span>\s*<p[^>]*>Ana Teste<\/p>/', $html);
+        $this->assertLessThan(strpos($html, 'Meus grupos</h1>'), strpos($html, 'Ana Teste'));
+        $this->assertStringNotContainsString('<header', $html);
+    }
+
     public function test_pagina_do_grupo_nao_tem_barra_de_navegacao(): void
     {
         $ana = User::factory()->create();

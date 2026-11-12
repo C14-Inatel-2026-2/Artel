@@ -7,7 +7,15 @@
 @endphp
 
 @section('content')
-    <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="flex items-center gap-3">
+        <span class="flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-white {{ $colors[auth()->id() % count($colors)] }}" aria-hidden="true">
+            {{ str(auth()->user()->name)->substr(0, 1)->upper() }}
+        </span>
+
+        <p class="min-w-0 truncate text-lg font-semibold text-slate-900">{{ auth()->user()->name }}</p>
+    </div>
+
+    <div class="mt-8 flex flex-wrap items-start justify-between gap-4">
         <div>
             <h1 id="meus-grupos" class="text-2xl font-bold text-slate-900">Meus grupos</h1>
             <p class="mt-1 text-slate-600">Escolha um grupo para ver os detalhes.</p>
