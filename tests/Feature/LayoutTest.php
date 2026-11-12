@@ -56,6 +56,18 @@ class LayoutTest extends TestCase
         $this->assertStringContainsString('cursor-pointer', $link);
     }
 
+    public function test_componente_button_aceita_tamanho_pequeno_e_variante_de_exclusao(): void
+    {
+        $pequeno = Blade::render('<x-button size="sm">Editar</x-button>');
+        $perigo = Blade::render('<x-button variant="danger">Excluir</x-button>');
+
+        $this->assertStringContainsString('min-h-9', $pequeno);
+        $this->assertStringNotContainsString('min-h-11', $pequeno);
+        $this->assertStringContainsString('bg-red-600', $perigo);
+        $this->assertStringContainsString('hover:bg-red-800', $perigo);
+        $this->assertStringContainsString('min-h-11', $perigo);
+    }
+
     public function test_layout_disponibiliza_areas_reutilizaveis(): void
     {
         $this->withViewErrors([]);
