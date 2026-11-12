@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Expense;
 use App\Models\ExpenseSplit;
 use App\Models\Group;
+use App\Services\ExpenseSplits\ExpenseSplitStrategyFactory;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -12,38 +13,42 @@ class ExpenseService
 {
     public function __construct(
         protected DebtSimplificationService $debtSimplification = new DebtSimplificationService,
+        protected ExpenseSplitStrategyFactory $splitStrategyFactory = new ExpenseSplitStrategyFactory,
     ) {}
 
     public function createExpense(Group $group, array $data): Expense
     {
-        $members = $group->members;
+        [$splitType, $shares] = $this->buildSplit($group, $data);
 
-        if ($members->isEmpty()) {
-            throw new InvalidArgumentException('O grupo não possui participantes para divisão da despesa.');
-        }
-
-        return DB::transaction(function () use ($group, $data, $members) {
+        return DB::transaction(function () use ($group, $data, $splitType, $shares) {
             $expense = Expense::create([
                 'description' => $data['description'],
                 'amount' => $data['amount'],
                 'paid_by' => $data['paid_by'],
+                'split_type' => $splitType,
                 'group_id' => $group->id,
             ]);
 
-            $totalCents = (int) round($data['amount'] * 100);
-            $count = $members->count();
-            $baseCents = intdiv($totalCents, $count);
-            $remainder = $totalCents % $count;
+            $this->createSplits($expense, $shares);
 
-            foreach ($members->values() as $index => $member) {
-                $cents = $baseCents + ($index < $remainder ? 1 : 0);
+            return $expense->load(['payer:id,name,email', 'splits.user:id,name,email']);
+        });
+    }
 
-                ExpenseSplit::create([
-                    'expense_id' => $expense->id,
-                    'user_id' => $member->id,
-                    'amount' => $cents / 100,
-                ]);
-            }
+    public function updateExpense(Expense $expense, array $data): Expense
+    {
+        [$splitType, $shares] = $this->buildSplit($expense->group, $data);
+
+        return DB::transaction(function () use ($expense, $data, $splitType, $shares) {
+            $expense->update([
+                'description' => $data['description'],
+                'amount' => $data['amount'],
+                'paid_by' => $data['paid_by'],
+                'split_type' => $splitType,
+            ]);
+
+            $expense->splits()->delete();
+            $this->createSplits($expense, $shares);
 
             return $expense->load(['payer:id,name,email', 'splits.user:id,name,email']);
         });
@@ -103,5 +108,34 @@ class ExpenseService
             'balances' => $balances,
             'suggested_transfers' => $this->debtSimplification->suggestTransfers($balances),
         ];
+    }
+
+    private function buildSplit(Group $group, array $data): array
+    {
+        $members = $group->members;
+
+        if ($members->isEmpty()) {
+            throw new InvalidArgumentException('O grupo não possui participantes para divisão da despesa.');
+        }
+
+        $splitType = $data['split_type'] ?? 'equal';
+        $totalCents = (int) round($data['amount'] * 100);
+        $strategy = $this->splitStrategyFactory->make($splitType);
+
+        return [
+            $splitType,
+            $strategy->calculateShares($members->pluck('id')->all(), $totalCents, $data),
+        ];
+    }
+
+    private function createSplits(Expense $expense, array $shares): void
+    {
+        foreach ($shares as $userId => $cents) {
+            ExpenseSplit::create([
+                'expense_id' => $expense->id,
+                'user_id' => $userId,
+                'amount' => $cents / 100,
+            ]);
+        }
     }
 }

@@ -14,6 +14,8 @@ class GroupMemberController extends Controller
      */
     public function index(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $members = $group->members()
             ->select('users.id', 'users.name', 'users.email')
             ->get();
@@ -30,7 +32,7 @@ class GroupMemberController extends Controller
             ? User::findOrFail($request->integer('user_id'))
             : User::where('email', $request->string('email'))->firstOrFail();
 
-        if ($group->members()->where('users.id', $user->id)->exists()) {
+        if ($group->hasMember($user)) {
             return response()->json([
                 'message' => 'Este usuário já faz parte do grupo.',
             ], 422);
@@ -53,6 +55,8 @@ class GroupMemberController extends Controller
      */
     public function destroy(Group $group, User $user): JsonResponse
     {
+        $this->authorize('view', $group);
+
         // O criador/dono não pode ser removido do grupo
         if ($user->id === $group->user_id) {
             return response()->json([
@@ -60,7 +64,9 @@ class GroupMemberController extends Controller
             ], 422);
         }
 
-        if (! $group->members()->where('users.id', $user->id)->exists()) {
+        $this->authorize('removeMember', [$group, $user]);
+
+        if (! $group->hasMember($user)) {
             return response()->json([
                 'message' => 'Este usuário não é participante deste grupo.',
             ], 404);

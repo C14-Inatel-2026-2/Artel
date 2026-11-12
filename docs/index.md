@@ -3,7 +3,7 @@
 O **Artel** é uma aplicação de divisão de despesas em grupo, desenvolvida como projeto acadêmico de Engenharia de Software (Inatel). A aplicação expõe uma **API REST** que permite criar grupos, gerenciar participantes, registrar despesas e consultar o saldo de cada participante.
 
 !!! warning "Projeto em desenvolvimento"
-    Esta documentação descreve o estado **atual** do código. Itens marcados como *limitação* ou *pendente* ainda não estão resolvidos. Em especial, a API **não possui autenticação** no momento (veja [Limitações atuais](#limitacoes-atuais)).
+    Esta documentação descreve o estado **atual** do código. Itens marcados como *limitação* ou *pendente* ainda não estão resolvidos. Veja [Limitações atuais](#limitacoes-atuais).
 
 ## Funcionalidades implementadas
 
@@ -11,22 +11,20 @@ O **Artel** é uma aplicação de divisão de despesas em grupo, desenvolvida co
 |---|---|
 | Grupos | Listar, criar, exibir, renomear e excluir grupos. O criador é adicionado automaticamente como participante. |
 | Participantes | Listar, adicionar (por `email` ou `user_id`) e remover participantes. O criador do grupo não pode ser removido. |
-| Despesas | Listar despesas do grupo, registrar, exibir e excluir despesas. |
-| Divisão | Cada despesa é dividida **igualmente** entre todos os participantes do grupo no momento do registro, com tratamento de centavos. |
+| Despesas | Listar despesas do grupo, registrar, exibir, editar e excluir despesas. |
+| Divisão | Cada despesa pode ser dividida **igualmente** (entre todos os participantes ou só entre os escolhidos), por **valores exatos** ou por **percentuais**, sempre com tratamento de centavos: a soma das parcelas é igual ao valor da despesa. |
 | Saldos | Cálculo de total pago, total devido, saldo líquido e status (`a_receber`, `a_pagar`, `quitado`) por participante. |
 | Simplificação | Sugestão de transferências (`suggested_transfers`) que minimiza o número de PIX entre participantes com base nos saldos líquidos. |
 | Quitações | Registro de acertos (total ou parcial) entre dois participantes e histórico por grupo; o saldo considera os acertos. |
-| Usuários | Rotas web de cadastro (`POST /user/register`) e login por sessão (`POST /user/login`). |
+| Autenticação | Cadastro, login, logout e consulta do usuário autenticado via API (`/api/auth/*`), com tokens do Laravel Sanctum. As demais rotas da API exigem token. |
+| Autorização | Acesso a cada grupo, suas despesas, saldos e quitações restrito ao dono e aos participantes (`GroupPolicy`). Renomear e excluir o grupo é exclusivo do dono. |
+| Usuários (web) | Telas e rotas web de cadastro (`/register`, `POST /user/register`) e login por sessão (`/login`, `POST /user/login`). |
 
 Detalhes de cada endpoint estão em [API](api.md).
 
 ## Limitações atuais
 
-- **Sem autenticação na API:** as rotas de `routes/api.php` não usam middleware de autenticação. Quando não há usuário autenticado, `GroupController` usa o **primeiro usuário do banco** (`User::first()`) como usuário atual.
-- **Sem autorização aplicada:** existe a classe `App\Policies\GroupPolicy`, mas ela não é chamada por nenhum controller ou Form Request. Todos os `authorize()` dos Form Requests retornam `true`.
-- **Divisão apenas igualitária:** não há divisão por valores ou percentuais personalizados.
-- **Sem edição de despesas:** não existe rota de atualização de despesa.
-- **Cadastro/login fora da API:** as rotas de usuário estão no grupo `web` (sessão e proteção CSRF) e respondem com redirecionamento, não com JSON.
+Nenhuma limitação registrada no momento.
 
 ## Tecnologias
 
@@ -34,11 +32,12 @@ Detalhes de cada endpoint estão em [API](api.md).
 |---|---|---|
 | PHP | `^8.4` | `composer.json`, `Dockerfile` |
 | Laravel | `^13.0` | `composer.json` |
+| Laravel Sanctum | `^4.3` | `composer.json` |
 | SQLite | conexão padrão | `.env.example`, `config/database.php` |
 | PHPUnit | `^12.5.12` | `composer.json` (dev) |
 | Mockery | `^1.6` | `composer.json` (dev) |
 | Laravel Pint | `^1.27` | `composer.json` (dev) |
-| Vite / Tailwind CSS | `^8.0.0` / `^4.0.0` | `package.json` (interface web em Blade, ainda não implementada) |
+| Vite / Tailwind CSS | `^8.0.0` / `^4.0.0` | `package.json` (interface web em Blade: layout base e telas de login e cadastro) |
 | MkDocs + Material | ver `requirements-docs.txt` | Documentação |
 
 ## Mapa da documentação

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Expense extends Model
 {
-    protected $fillable = ['description', 'amount', 'paid_by', 'group_id'];
+    protected $fillable = ['description', 'amount', 'paid_by', 'split_type', 'group_id'];
 
     /**
      * Usuário que pagou a despesa.

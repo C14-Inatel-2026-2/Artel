@@ -10,7 +10,7 @@ class StoreSettlementRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('view', $this->route('group'));
     }
 
     public function rules(): array
@@ -47,11 +47,11 @@ class StoreSettlementRequest extends FormRequest
                 return;
             }
 
-            if ($this->filled('payer_id') && ! $group->members()->where('users.id', $this->payer_id)->exists()) {
+            if ($this->filled('payer_id') && ! $group->hasMember((int) $this->payer_id)) {
                 $validator->errors()->add('payer_id', 'O pagador deve ser um participante do grupo.');
             }
 
-            if ($this->filled('payee_id') && ! $group->members()->where('users.id', $this->payee_id)->exists()) {
+            if ($this->filled('payee_id') && ! $group->hasMember((int) $this->payee_id)) {
                 $validator->errors()->add('payee_id', 'O recebedor deve ser um participante do grupo.');
             }
         });

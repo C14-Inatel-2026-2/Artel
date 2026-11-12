@@ -3,17 +3,15 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-
-        if (! Auth::attempt($credentials)) {
-            return back()->withErrors(['email' => 'Email ou senha errado']);
+        if (! Auth::attempt($request->credentials())) {
+            return back()->withErrors(['email' => 'Email ou senha errado'])->onlyInput('email');
         }
 
         return redirect('/');
