@@ -112,7 +112,7 @@ class AuthViewsTest extends TestCase
         $tokenAntes = session()->token();
 
         $this->post('/user/login', ['email' => $user->email, 'password' => 'senha-segura-123'])
-            ->assertRedirect('/');
+            ->assertRedirect('/groups');
 
         $this->assertAuthenticatedAs($user);
         $this->assertNotSame($idAntes, session()->getId());
@@ -123,9 +123,36 @@ class AuthViewsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/login')->assertRedirect('/');
-        $this->actingAs($user)->get('/register')->assertRedirect('/');
-        $this->actingAs($user)->post('/user/login', [])->assertRedirect('/');
-        $this->actingAs($user)->post('/user/register', [])->assertRedirect('/');
+        $this->actingAs($user)->get('/login')->assertRedirect('/groups');
+        $this->actingAs($user)->get('/register')->assertRedirect('/groups');
+        $this->actingAs($user)->post('/user/login', [])->assertRedirect('/groups');
+        $this->actingAs($user)->post('/user/register', [])->assertRedirect('/groups');
     }
+
+    public function test_raiz_manda_o_logado_para_os_grupos_e_o_visitante_para_o_login(): void
+    {
+        $this->get('/')->assertRedirect('/login');
+
+        $this->actingAs(User::factory()->create())->get('/')->assertRedirect('/groups');
+    }
+
+    public function test_aviso_do_cadastro_chega_ao_login_sem_passar_pela_raiz(): void
+    {
+        $this->post('/user/register', [
+            'name' => 'Ana Teste',
+            'email' => 'ana@example.com',
+            'password' => 'senha-segura-123',
+            'password_confirmation' => 'senha-segura-123',
+        ])->assertRedirect('/login');
+
+        $this->followingRedirects()
+            ->post('/user/register', [
+                'name' => 'Bruno Teste',
+                'email' => 'bruno@example.com',
+                'password' => 'senha-segura-123',
+                'password_confirmation' => 'senha-segura-123',
+            ])
+            ->assertSee('Conta criada. Entre para continuar.');
+    }
+
 }

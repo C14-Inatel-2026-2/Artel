@@ -2,10 +2,6 @@
 
 @section('title', 'Meus grupos - Artel')
 
-@section('nav')
-    <span class="text-slate-600">{{ auth()->user()->name }}</span>
-@endsection
-
 @php
     $colors = ['bg-indigo-600', 'bg-teal-600', 'bg-amber-500', 'bg-orange-600', 'bg-pink-600', 'bg-sky-600'];
 @endphp

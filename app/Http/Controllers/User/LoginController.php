@@ -14,6 +14,6 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Email ou senha errado'])->onlyInput('email');
         }
 
-        return redirect('/');
+        return redirect()->route('web.groups.index');
     }
 }

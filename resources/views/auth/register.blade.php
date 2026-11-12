@@ -2,10 +2,6 @@
 
 @section('title', 'Criar conta - Artel')
 
-@section('nav')
-    <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Entrar</a>
-@endsection
-
 @section('content')
     <x-auth.shell>
         <h1 class="text-2xl font-bold text-slate-900">Criar conta</h1>

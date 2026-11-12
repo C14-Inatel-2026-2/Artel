@@ -6,9 +6,7 @@ use App\Http\Controllers\MemberPageController;
 use App\Http\Controllers\SettlementPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn () => redirect()->route(auth()->check() ? 'web.groups.index' : 'login'));
 
 Route::middleware('auth')->prefix('groups')->name('web.groups.')->group(function () {
     Route::get('/', [GroupPageController::class, 'index'])->name('index');

@@ -25,9 +25,9 @@ class GroupPagesTest extends TestCase
     {
         $group = $this->makeGroup(User::factory()->create(), 'Viagem');
 
-        $this->get('/groups')->assertRedirect('/');
-        $this->get('/groups/'.$group->id)->assertRedirect('/');
-        $this->post('/groups', ['name' => 'Novo grupo'])->assertRedirect('/');
+        $this->get('/groups')->assertRedirect('/login');
+        $this->get('/groups/'.$group->id)->assertRedirect('/login');
+        $this->post('/groups', ['name' => 'Novo grupo'])->assertRedirect('/login');
     }
 
     public function test_lista_somente_os_grupos_do_usuario_autenticado(): void
@@ -315,8 +315,8 @@ class GroupPagesTest extends TestCase
     {
         $group = $this->makeGroup(User::factory()->create(), 'Viagem');
 
-        $this->post('/groups/'.$group->id.'/expenses', [])->assertRedirect('/');
-        $this->post('/groups/'.$group->id.'/settlements', [])->assertRedirect('/');
+        $this->post('/groups/'.$group->id.'/expenses', [])->assertRedirect('/login');
+        $this->post('/groups/'.$group->id.'/settlements', [])->assertRedirect('/login');
     }
 
     public function test_formulario_de_despesa_oferece_os_tres_modos_de_divisao(): void
@@ -669,8 +669,8 @@ class GroupPagesTest extends TestCase
 
     public function test_visitante_nao_edita_nem_exclui_despesa(): void
     {
-        $this->put('/expenses/1', [])->assertRedirect('/');
-        $this->delete('/expenses/1')->assertRedirect('/');
+        $this->put('/expenses/1', [])->assertRedirect('/login');
+        $this->delete('/expenses/1')->assertRedirect('/login');
     }
 
     public function test_historico_lista_os_pagamentos_entre_pessoas(): void
@@ -765,6 +765,17 @@ class GroupPagesTest extends TestCase
         $this->actingAs($ana)
             ->post('/groups/'.$group->id.'/members', ['email' => 'isso-nao-e-email'])
             ->assertSessionHasErrors(['email' => 'Informe um e-mail válido.']);
+    }
+
+    public function test_pagina_do_grupo_nao_tem_barra_de_navegacao(): void
+    {
+        $ana = User::factory()->create();
+        $group = $this->makeGroup($ana, 'Viagem da turma');
+
+        $this->actingAs($ana)->get('/groups/'.$group->id)
+            ->assertOk()
+            ->assertDontSee('<header', false)
+            ->assertDontSee('<nav', false);
     }
 
 }
