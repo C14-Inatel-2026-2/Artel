@@ -112,7 +112,8 @@ class AuthViewsTest extends TestCase
         $tokenAntes = session()->token();
 
         $this->post('/user/login', ['email' => $user->email, 'password' => 'senha-segura-123'])
-            ->assertRedirect('/groups');
+            ->assertRedirect('/groups')
+            ->assertSessionHas('status', 'Login realizado com sucesso.');
 
         $this->assertAuthenticatedAs($user);
         $this->assertNotSame($idAntes, session()->getId());
@@ -194,4 +195,25 @@ class AuthViewsTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_login_valido_mostra_o_aviso_de_sucesso_na_pagina_de_grupos(): void
+    {
+        $user = User::factory()->create(['password' => 'senha-segura-123']);
+
+        $this->followingRedirects()
+            ->post('/user/login', ['email' => $user->email, 'password' => 'senha-segura-123'])
+            ->assertSee('Meus grupos')
+            ->assertSee('Tudo certo')
+            ->assertSee('Login realizado com sucesso.')
+            ->assertSee('role="status"', false);
+    }
+
+    public function test_login_com_senha_errada_nao_mostra_aviso_de_sucesso(): void
+    {
+        $user = User::factory()->create(['password' => 'senha-segura-123']);
+
+        $this->from('/login')->followingRedirects()
+            ->post('/user/login', ['email' => $user->email, 'password' => 'errada'])
+            ->assertDontSee('Login realizado com sucesso.')
+            ->assertSee('Algo deu errado');
+    }
 }

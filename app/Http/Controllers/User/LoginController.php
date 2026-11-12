@@ -16,7 +16,9 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Email ou senha errado'])->onlyInput('email');
         }
 
-        return redirect()->route('web.groups.index');
+        return redirect()
+            ->route('web.groups.index')
+            ->with('status', 'Login realizado com sucesso.');
     }
 
     public function logout(Request $request): RedirectResponse
