@@ -789,4 +789,17 @@ class GroupPagesTest extends TestCase
             ->assertDontSee('<nav', false);
     }
 
+    public function test_listagem_tem_o_botao_sair_ao_lado_do_nome(): void
+    {
+        $ana = User::factory()->create(['name' => 'Ana Teste']);
+
+        $html = $this->actingAs($ana)->get('/groups')
+            ->assertOk()
+            ->assertSee('action="'.route('logout').'"', false)
+            ->assertSee('Sair')
+            ->getContent();
+
+        $this->assertLessThan(strpos($html, 'Meus grupos</h1>'), strpos($html, 'Sair'));
+    }
+
 }

@@ -155,4 +155,43 @@ class AuthViewsTest extends TestCase
             ->assertSee('Conta criada. Entre para continuar.');
     }
 
+    public function test_sair_encerra_a_sessao_e_volta_ao_login_com_aviso(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/logout')
+            ->assertRedirect('/login')
+            ->assertSessionHas('status', 'Você saiu da sua conta.');
+
+        $this->assertGuest();
+
+        $this->get('/groups')->assertRedirect('/login');
+    }
+
+    public function test_sair_regenera_a_sessao_e_o_token_csrf(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->startSession();
+        $idAntes = session()->getId();
+        $tokenAntes = session()->token();
+
+        $this->post('/logout');
+
+        $this->assertNotSame($idAntes, session()->getId());
+        $this->assertNotSame($tokenAntes, session()->token());
+    }
+
+    public function test_visitante_nao_consegue_sair(): void
+    {
+        $this->post('/logout')->assertRedirect('/login');
+    }
+
+    public function test_logout_da_web_nao_aceita_get(): void
+    {
+        $this->actingAs(User::factory()->create())->get('/logout')->assertStatus(405);
+
+        $this->assertAuthenticated();
+    }
+
 }

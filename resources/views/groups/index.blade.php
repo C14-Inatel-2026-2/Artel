@@ -7,12 +7,20 @@
 @endphp
 
 @section('content')
-    <div class="flex items-center gap-3">
-        <span class="flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-white {{ $colors[auth()->id() % count($colors)] }}" aria-hidden="true">
-            {{ str(auth()->user()->name)->substr(0, 1)->upper() }}
-        </span>
+    <div class="flex items-center justify-between gap-3">
+        <div class="flex min-w-0 items-center gap-3">
+            <span class="flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-white {{ $colors[auth()->id() % count($colors)] }}" aria-hidden="true">
+                {{ str(auth()->user()->name)->substr(0, 1)->upper() }}
+            </span>
 
-        <p class="min-w-0 truncate text-lg font-semibold text-slate-900">{{ auth()->user()->name }}</p>
+            <p class="min-w-0 truncate text-lg font-semibold text-slate-900">{{ auth()->user()->name }}</p>
+        </div>
+
+        <form method="POST" action="{{ route('logout') }}" class="shrink-0">
+            @csrf
+
+            <x-button type="submit" variant="secondary" size="sm">Sair</x-button>
+        </form>
     </div>
 
     <div class="mt-8 flex flex-wrap items-start justify-between gap-4">
