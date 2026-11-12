@@ -15,6 +15,19 @@ class DebtSimplificationService
      */
     public function suggestTransfers(array $balances): array
     {
+        [$debtors, $creditors] = $this->partitionBalances($balances);
+
+        return $this->matchTransfers($debtors, $creditors);
+    }
+
+    /**
+     * Separa saldos líquidos em filas de devedores e credores (em centavos).
+     *
+     * @param  array<int, array{user: array{id: int, name: string, email: string}, net_balance: float}>  $balances
+     * @return array{0: list<array{user: array{id: int, name: string, email: string}, amount_cents: int}>, 1: list<array{user: array{id: int, name: string, email: string}, amount_cents: int}>}
+     */
+    private function partitionBalances(array $balances): array
+    {
         $debtors = [];
         $creditors = [];
 
@@ -34,6 +47,18 @@ class DebtSimplificationService
             }
         }
 
+        return [$debtors, $creditors];
+    }
+
+    /**
+     * Emparelha maior devedor com maior credor até zerar as filas.
+     *
+     * @param  list<array{user: array{id: int, name: string, email: string}, amount_cents: int}>  $debtors
+     * @param  list<array{user: array{id: int, name: string, email: string}, amount_cents: int}>  $creditors
+     * @return array<int, array{from: array{id: int, name: string, email: string}, to: array{id: int, name: string, email: string}, amount: float}>
+     */
+    private function matchTransfers(array $debtors, array $creditors): array
+    {
         $transfers = [];
 
         while ($debtors !== [] && $creditors !== []) {

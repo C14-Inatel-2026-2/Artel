@@ -41,6 +41,8 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
 | `Unit/StoreExpenseRequestTest.php` | Regras obrigatórias, valor mínimo e regras de divisão (`split_type`, `participants`, `splits`) de `StoreExpenseRequest` |
 | `Unit/StoreGroupRequestTest.php` | Regras de `StoreGroupRequest` e falha com nome curto |
+| `Unit/SettlementServiceTest.php` | Criação e listagem de quitações via `SettlementService` (banco em memória) |
+| `Unit/DebtSimplificationServiceTest.php` | Simplificação de dívidas: cadeia colapsada, lista vazia e conservação de saldos |
 | `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
 | `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
 | `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |

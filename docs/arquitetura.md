@@ -12,7 +12,7 @@ app/
 │   │   ├── GroupMemberController.php   # Participantes do grupo
 │   │   ├── ExpenseController.php       # Despesas (delega ao ExpenseService)
 │   │   ├── GroupBalanceController.php  # Saldos (delega ao ExpenseService)
-│   │   ├── SettlementController.php    # Quitações / acertos entre participantes
+│   │   ├── SettlementController.php    # Quitações (delega ao SettlementService)
 │   │   └── User/
 │   │       ├── RegisterController.php  # Cadastro (rota web)
 │   │       └── LoginController.php     # Login por sessão (rota web)
@@ -26,6 +26,7 @@ app/
 ├── Policies/GroupPolicy.php            # Regras de autorização (ainda não aplicadas)
 └── Services/
     ├── ExpenseService.php              # Divisão de despesas e cálculo de saldos
+    ├── SettlementService.php           # Listagem e registro de quitações
     └── DebtSimplificationService.php   # Sugestão mínima de transferências (centavos)
 routes/
 ├── api.php                             # Rotas REST, prefixo /api
@@ -41,8 +42,8 @@ O roteamento é configurado em `bootstrap/app.php`. Nesse arquivo também está 
 |---|---|---|
 | Rotas | Mapear URL e método HTTP para o controller | Usam *route model binding* (`{group}`, `{expense}`, `{user}`): um ID inexistente resulta em 404. |
 | Form Requests | Validar a entrada e definir mensagens em português | `authorize()` sempre retorna `true`. `StoreExpenseRequest` e `StoreSettlementRequest` também verificam se os usuários envolvidos participam do grupo. |
-| Controllers | Orquestrar a requisição e montar a resposta JSON | `GroupController`, `GroupMemberController` e `SettlementController` acessam os models diretamente. `ExpenseController` e `GroupBalanceController` delegam ao `ExpenseService`. |
-| Service | Regra de negócio de despesas e simplificação | `ExpenseService` (`createExpense`, `deleteExpense`, `calculateBalance`, com acertos de `settlements`) e `DebtSimplificationService` (`suggestTransfers`). As operações de escrita usam `DB::transaction`. |
+| Controllers | Orquestrar a requisição e montar a resposta JSON | `GroupController` e `GroupMemberController` acessam os models diretamente. `ExpenseController` e `GroupBalanceController` delegam ao `ExpenseService`; `SettlementController` delega ao `SettlementService`. |
+| Service | Regra de negócio de despesas, quitações e simplificação | `ExpenseService` (`createExpense`, `deleteExpense`, `calculateBalance`), `SettlementService` (`listForGroup`, `create`) e `DebtSimplificationService` (`suggestTransfers`, com `partitionBalances` + `matchTransfers`). As operações de escrita usam `DB::transaction` quando necessário. |
 | Models | Mapeamento das tabelas e relacionamentos | Eloquent. As respostas JSON são os próprios models serializados (não há API Resources). |
 | Policy | Regras de autorização para grupos | `GroupPolicy` define `viewAny`, `view`, `update`, `delete`, `addMember` e `removeMember`, mas **não é invocada** pelo código atual. |
 
