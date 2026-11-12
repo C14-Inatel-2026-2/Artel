@@ -8,7 +8,7 @@ DOCS_PORT ?= 8001
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install serve test migrate migrate-status lint lint-fix audit docs-serve docs-build
+.PHONY: help install serve test migrate migrate-status lint lint-fix analyse audit docs-serve docs-build
 
 # Ajuda gerada pelo próprio make ($(info)), sem depender de echo/grep/awk.
 help:
@@ -22,6 +22,7 @@ help:
 	$(info $()  migrate-status  Mostra o status das migrations (somente leitura))
 	$(info $()  lint            Verifica o estilo com Laravel Pint, sem alterar arquivos)
 	$(info $()  lint-fix        Corrige automaticamente o estilo do código com Laravel Pint)
+	$(info $()  analyse         Análise estática com Larastan (phpstan analyse))
 	$(info $()  audit           Audita vulnerabilidades nas dependências PHP (composer audit))
 	$(info )
 	$(info Documentação (requer o .venv do MkDocs ativado):)
@@ -49,6 +50,9 @@ lint:
 
 lint-fix:
 	$(PHP) vendor/bin/pint
+
+analyse:
+	$(PHP) vendor/bin/phpstan analyse
 
 audit:
 	$(COMPOSER) audit

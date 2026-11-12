@@ -9,7 +9,7 @@ Build → Quality → Testes e Cobertura → Package → Deploy e Smoke Test (so
 | Etapa | O que faz |
 |---|---|
 | Build | `composer validate`, `composer install`, `.env` e `key:generate` |
-| Quality | Laravel Pint (`--test`) e `composer audit` |
+| Quality | Laravel Pint (`--test`), Larastan (`phpstan analyse`) e `composer audit` |
 | Testes e Cobertura | PHPUnit com PCOV, relatórios JUnit e de cobertura |
 | Package | `composer install --no-dev`, caches de produção e pacote `.tar.gz` com `sha256` |
 | Deploy e Smoke Test | `fly deploy` no app `artel-c14` e `GET /up` esperando HTTP 200 |

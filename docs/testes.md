@@ -1,6 +1,6 @@
 # Testes
 
-A suíte usa **PHPUnit 12** (via `php artisan test`) e **Mockery** para mocks.
+A suíte usa **PHPUnit 12** (via `php artisan test`) e **Mockery** para mocks. A análise estática de tipagem em `app/` é feita com **Larastan** (via `make analyse`; veja [Comandos](comandos.md#analyse)).
 
 ## Executar
 
@@ -19,6 +19,12 @@ Para executar apenas uma suíte ou um arquivo:
 ```bash
 php artisan test --testsuite=Unit
 php artisan test tests/Unit/ExpenseControllerTest.php
+```
+
+Análise estática (independente da suíte PHPUnit):
+
+```bash
+make analyse
 ```
 
 ## Ambiente de teste

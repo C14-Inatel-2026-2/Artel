@@ -41,9 +41,10 @@ make serve       # http://127.0.0.1:8000
 ## Testes e qualidade
 
 ```bash
-make test    # PHPUnit
-make lint    # Laravel Pint (somente leitura)
-make audit   # vulnerabilidades nas dependências
+make test     # PHPUnit
+make lint     # Laravel Pint (somente leitura)
+make analyse  # Larastan (análise estática)
+make audit    # vulnerabilidades nas dependências
 ```
 
 A imagem Docker é de produção (sem dependências de desenvolvimento), então os testes rodam localmente ou na pipeline.

@@ -36,12 +36,13 @@ pipeline {
             }
         }
 
-        // Verifica formatação (Laravel Pint) e vulnerabilidades de dependências (Composer Audit).
+        // Verifica formatação (Laravel Pint), tipagem (Larastan) e vulnerabilidades (Composer Audit).
         // Qualquer exit code != 0 falha o stage e impede o avanço da pipeline.
         stage('Quality') {
             steps {
                 sh '''
                     ./vendor/bin/pint --test
+                    ./vendor/bin/phpstan analyse --no-progress
                     composer audit --no-interaction
                 '''
             }
