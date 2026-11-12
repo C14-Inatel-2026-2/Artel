@@ -802,4 +802,17 @@ class GroupPagesTest extends TestCase
         $this->assertLessThan(strpos($html, 'Meus grupos</h1>'), strpos($html, 'Sair'));
     }
 
+    public function test_abas_tem_a_opcao_participantes_que_abre_o_modal(): void
+    {
+        $ana = User::factory()->create();
+        $group = $this->makeGroup($ana, 'Viagem da turma');
+
+        $html = $this->actingAs($ana)->get('/groups/'.$group->id)->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/data-open-modal="membros-modal"[^>]*aria-haspopup="dialog"[^>]*>Participantes<\/button>/', $html);
+        $this->assertLessThan(
+            strpos($html, 'data-new-expense'),
+            strpos($html, '>Participantes</button>'),
+        );
+    }
 }

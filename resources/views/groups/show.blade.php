@@ -76,10 +76,14 @@
     </dl>
 
     <div class="mt-6 flex flex-wrap items-end justify-between gap-x-4 border-b border-slate-200">
-        <div role="tablist" aria-label="Seções do grupo" class="flex gap-5">
-            <button type="button" role="tab" id="aba-despesas" data-tab="despesas" aria-controls="painel-despesas" aria-selected="true" class="-mb-px cursor-pointer border-b-2 border-indigo-600 pb-3 text-base font-semibold text-indigo-700 transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Despesas</button>
-            <button type="button" role="tab" id="aba-saldos" data-tab="saldos" aria-controls="painel-saldos" aria-selected="false" class="-mb-px cursor-pointer border-b-2 border-transparent pb-3 text-base font-semibold text-slate-600 transition-colors duration-300 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Saldos</button>
-            <button type="button" role="tab" id="aba-historico" data-tab="historico" aria-controls="painel-historico" aria-selected="false" class="-mb-px cursor-pointer border-b-2 border-transparent pb-3 text-base font-semibold text-slate-600 transition-colors duration-300 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Histórico</button>
+        <div class="flex gap-4 sm:gap-5">
+            <div role="tablist" aria-label="Seções do grupo" class="flex gap-4 sm:gap-5">
+                <button type="button" role="tab" id="aba-despesas" data-tab="despesas" aria-controls="painel-despesas" aria-selected="true" class="-mb-px cursor-pointer border-b-2 border-indigo-600 pb-3 text-base font-semibold text-indigo-700 transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Despesas</button>
+                <button type="button" role="tab" id="aba-saldos" data-tab="saldos" aria-controls="painel-saldos" aria-selected="false" class="-mb-px cursor-pointer border-b-2 border-transparent pb-3 text-base font-semibold text-slate-600 transition-colors duration-300 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Saldos</button>
+                <button type="button" role="tab" id="aba-historico" data-tab="historico" aria-controls="painel-historico" aria-selected="false" class="-mb-px cursor-pointer border-b-2 border-transparent pb-3 text-base font-semibold text-slate-600 transition-colors duration-300 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Histórico</button>
+            </div>
+
+            <button type="button" data-open-modal="membros-modal" aria-haspopup="dialog" class="-mb-px cursor-pointer border-b-2 border-transparent pb-3 text-base font-semibold text-slate-600 transition-colors duration-300 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Participantes</button>
         </div>
 
         <x-button data-open-modal="nova-despesa-modal" data-new-expense class="mb-2 ml-auto">Nova despesa</x-button>
