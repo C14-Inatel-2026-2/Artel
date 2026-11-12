@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Expense;
 use App\Models\ExpenseSplit;
 use App\Models\Group;
+use App\Services\ExpenseSplits\ExpenseSplitStrategyFactory;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -12,6 +13,7 @@ class ExpenseService
 {
     public function __construct(
         protected DebtSimplificationService $debtSimplification = new DebtSimplificationService,
+        protected ExpenseSplitStrategyFactory $splitStrategyFactory = new ExpenseSplitStrategyFactory,
     ) {}
 
     public function createExpense(Group $group, array $data): Expense
@@ -118,10 +120,11 @@ class ExpenseService
 
         $splitType = $data['split_type'] ?? 'equal';
         $totalCents = (int) round($data['amount'] * 100);
+        $strategy = $this->splitStrategyFactory->make($splitType);
 
         return [
             $splitType,
-            $this->calculateShares($members->pluck('id')->all(), $totalCents, $splitType, $data),
+            $strategy->calculateShares($members->pluck('id')->all(), $totalCents, $data),
         ];
     }
 
@@ -134,95 +137,5 @@ class ExpenseService
                 'amount' => $cents / 100,
             ]);
         }
-    }
-
-    private function calculateShares(array $memberIds, int $totalCents, string $splitType, array $data): array
-    {
-        return match ($splitType) {
-            'exact' => $this->exactShares($data['splits'], $totalCents),
-            'percentage' => $this->percentageShares($data['splits'], $totalCents),
-            default => $this->equalShares($data['participants'] ?? $memberIds, $totalCents),
-        };
-    }
-
-    private function equalShares(array $userIds, int $totalCents): array
-    {
-        $userIds = array_values($userIds);
-        $baseCents = intdiv($totalCents, count($userIds));
-        $remainder = $totalCents % count($userIds);
-        $shares = [];
-
-        foreach ($userIds as $index => $userId) {
-            $shares[$userId] = $baseCents + ($index < $remainder ? 1 : 0);
-        }
-
-        return $shares;
-    }
-
-    private function exactShares(array $splits, int $totalCents): array
-    {
-        $shares = [];
-
-        foreach ($splits as $split) {
-            $shares[$split['user_id']] = (int) round($split['amount'] * 100);
-        }
-
-        $sumCents = array_sum($shares);
-
-        if ($sumCents !== $totalCents) {
-            throw new InvalidArgumentException(sprintf(
-                'A soma das parcelas (R$ %s) é diferente do valor da despesa (R$ %s).',
-                $this->formatCents($sumCents),
-                $this->formatCents($totalCents),
-            ));
-        }
-
-        return $shares;
-    }
-
-    private function percentageShares(array $splits, int $totalCents): array
-    {
-        $hundredths = [];
-
-        foreach ($splits as $split) {
-            $hundredths[$split['user_id']] = (int) round($split['percentage'] * 100);
-        }
-
-        $sumHundredths = array_sum($hundredths);
-
-        if ($sumHundredths !== 10000) {
-            throw new InvalidArgumentException(sprintf(
-                'A soma dos percentuais (%s%%) deve ser exatamente 100%%.',
-                number_format($sumHundredths / 100, 2, ',', '.'),
-            ));
-        }
-
-        $shares = [];
-        $remainders = [];
-
-        foreach ($hundredths as $userId => $value) {
-            $product = $totalCents * $value;
-            $shares[$userId] = intdiv($product, 10000);
-            $remainders[$userId] = $product % 10000;
-        }
-
-        $leftoverCents = $totalCents - array_sum($shares);
-        arsort($remainders);
-
-        foreach (array_keys($remainders) as $userId) {
-            if ($leftoverCents <= 0) {
-                break;
-            }
-
-            $shares[$userId]++;
-            $leftoverCents--;
-        }
-
-        return $shares;
-    }
-
-    private function formatCents(int $cents): string
-    {
-        return number_format($cents / 100, 2, ',', '.');
     }
 }
