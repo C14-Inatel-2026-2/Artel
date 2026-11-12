@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGroupRequest;
 use App\Http\Requests\UpdateGroupRequest;
 use App\Models\Group;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,11 +16,7 @@ class GroupController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user() ?? User::first();
-
-        if (! $user) {
-            return response()->json([], 200);
-        }
+        $user = $request->user();
 
         $groups = Group::query()
             ->where('user_id', $user->id)
@@ -39,11 +34,7 @@ class GroupController extends Controller
      */
     public function store(StoreGroupRequest $request): JsonResponse
     {
-        $user = $request->user() ?? User::first();
-
-        if (! $user) {
-            return response()->json(['message' => 'Nenhum usuário autenticado para criar o grupo.'], 401);
-        }
+        $user = $request->user();
 
         $group = DB::transaction(function () use ($request, $user) {
             $group = Group::create([
@@ -68,6 +59,8 @@ class GroupController extends Controller
      */
     public function show(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $group->load([
             'owner:id,name,email',
             'members:id,name,email',
@@ -95,6 +88,8 @@ class GroupController extends Controller
      */
     public function destroy(Group $group): JsonResponse
     {
+        $this->authorize('delete', $group);
+
         $group->delete();
 
         return response()->json([

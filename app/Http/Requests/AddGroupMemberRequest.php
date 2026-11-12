@@ -12,7 +12,7 @@ class AddGroupMemberRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('addMember', $this->route('group'));
     }
 
     /**

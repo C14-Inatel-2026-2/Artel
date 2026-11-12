@@ -14,6 +14,8 @@ class SettlementController extends Controller
      */
     public function index(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $settlements = $group->settlements()
             ->with(['payer:id,name,email', 'payee:id,name,email'])
             ->latest('settled_at')
