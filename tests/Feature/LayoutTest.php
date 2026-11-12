@@ -27,6 +27,27 @@ class LayoutTest extends TestCase
         $response->assertSee('data-timeout="5000"', false);
     }
 
+    public function test_notificacao_fica_no_canto_superior_direito_com_titulo_e_barra_de_tempo(): void
+    {
+        $sucesso = $this->withSession(['status' => 'Conta criada.'])->get('/login');
+
+        $sucesso->assertSee('fixed right-0 top-0', false);
+        $sucesso->assertSee('Tudo certo');
+        $sucesso->assertSee('animate-toast-in', false);
+        $sucesso->assertSee('animate-toast-progress', false);
+        $sucesso->assertSee('animation-duration: 5000ms', false);
+        $sucesso->assertSee('aria-label="Fechar notificação"', false);
+
+        $this->withViewErrors(['email' => 'Erro de teste.']);
+
+        $erro = Blade::render('<x-toasts />');
+
+        $this->assertStringContainsString('Algo deu errado', $erro);
+        $this->assertStringContainsString('role="alert"', $erro);
+        $this->assertStringContainsString('animation-duration: 8000ms', $erro);
+        $this->assertStringContainsString('Erro de teste.', $erro);
+    }
+
     public function test_sem_mensagens_nenhuma_notificacao_e_renderizada(): void
     {
         $this->get('/')->assertDontSee('data-toast', false);
