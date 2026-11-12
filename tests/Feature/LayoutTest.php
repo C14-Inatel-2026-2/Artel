@@ -90,6 +90,31 @@ class LayoutTest extends TestCase
         $this->assertStringContainsString('min-h-11', $perigo);
     }
 
+    public function test_componente_modal_renderiza_dialogo_acessivel_com_largura_media_por_padrao(): void
+    {
+        $html = Blade::render('<x-modal id="meu-modal" title="Meu título"><p>conteudo-do-modal</p></x-modal>');
+
+        $this->assertStringContainsString('<dialog', $html);
+        $this->assertStringContainsString('id="meu-modal"', $html);
+        $this->assertStringContainsString('aria-labelledby="meu-modal-titulo"', $html);
+        $this->assertStringContainsString('<h2 id="meu-modal-titulo"', $html);
+        $this->assertStringContainsString('Meu título', $html);
+        $this->assertStringContainsString('conteudo-do-modal', $html);
+        $this->assertStringContainsString('max-w-md', $html);
+        $this->assertStringNotContainsString('max-w-lg', $html);
+        $this->assertStringContainsString('backdrop:backdrop-blur-sm', $html);
+        $this->assertStringContainsString('data-close-modal', $html);
+        $this->assertStringContainsString('aria-label="Fechar"', $html);
+    }
+
+    public function test_componente_modal_aceita_largura_grande(): void
+    {
+        $html = Blade::render('<x-modal id="grande" title="Grande" size="lg">x</x-modal>');
+
+        $this->assertStringContainsString('max-w-lg', $html);
+        $this->assertStringNotContainsString('max-w-md', $html);
+    }
+
     public function test_layout_disponibiliza_areas_reutilizaveis(): void
     {
         $this->withViewErrors([]);
