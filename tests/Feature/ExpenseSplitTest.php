@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ExpenseSplitTest extends TestCase
@@ -34,6 +35,8 @@ class ExpenseSplitTest extends TestCase
 
         $this->group = Group::create(['name' => 'Viagem', 'user_id' => $this->owner->id]);
         $this->group->members()->attach([$this->owner->id, $this->joao->id, $this->maria->id]);
+
+        Sanctum::actingAs($this->owner);
     }
 
     private function storeExpense(array $overrides = []): TestResponse

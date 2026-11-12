@@ -13,13 +13,11 @@ class SettlementController extends Controller
         protected SettlementService $settlementService = new SettlementService,
     ) {}
 
-    /**
-     * Lista o histórico de quitações do grupo.
-     */
-    public function index(Group $group): JsonResponse
-    {
-        return response()->json($this->settlementService->listForGroup($group), 200);
-    }
+     public function index(Group $group): JsonResponse
+  {
+      $this->authorize('view', $group);
+      return response()->json($this->settlementService->listForGroup($group), 200);
+  }
 
     /**
      * Registra uma quitação (total ou parcial) entre dois participantes.

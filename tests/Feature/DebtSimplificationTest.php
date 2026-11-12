@@ -7,6 +7,7 @@ use App\Models\ExpenseSplit;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class DebtSimplificationTest extends TestCase
@@ -40,6 +41,7 @@ class DebtSimplificationTest extends TestCase
         ]);
         ExpenseSplit::create(['expense_id' => $expenseBc->id, 'user_id' => $b->id, 'amount' => 50.00]);
 
+        Sanctum::actingAs($a);
         $response = $this->getJson("/api/groups/{$group->id}/balances");
 
         $response->assertOk()
@@ -55,6 +57,7 @@ class DebtSimplificationTest extends TestCase
         $group = Group::create(['name' => 'Quitado', 'user_id' => $owner->id]);
         $group->members()->attach($owner->id);
 
+        Sanctum::actingAs($owner);
         $response = $this->getJson("/api/groups/{$group->id}/balances");
 
         $response->assertOk()
