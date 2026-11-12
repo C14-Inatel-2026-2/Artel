@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Expense;
 use App\Models\ExpenseSplit;
 use App\Models\Group;
+use App\Models\User;
 use App\Services\ExpenseSplits\ExpenseSplitStrategyFactory;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -69,17 +70,8 @@ class ExpenseService
         $balances = [];
 
         foreach ($members as $member) {
-            $totalPaid = (float) $group->expenses()->where('paid_by', $member->id)->sum('amount');
-
-            $totalOwed = (float) ExpenseSplit::where('user_id', $member->id)
-                ->whereHas('expense', fn ($q) => $q->where('group_id', $group->id))
-                ->sum('amount');
-
-            // Acertos: quem pagou reduz a dívida (sobe o saldo); quem recebeu reduz o crédito (desce o saldo).
-            $totalSettledPaid = (float) $group->settlements()->where('paid_by', $member->id)->sum('amount');
-            $totalSettledReceived = (float) $group->settlements()->where('paid_to', $member->id)->sum('amount');
-
-            $netBalance = round($totalPaid - $totalOwed + $totalSettledPaid - $totalSettledReceived, 2);
+            $totals = $this->balanceTotalsForMember($group, $member->id);
+            $netBalance = $totals['net_balance'];
 
             $status = match (true) {
                 $netBalance > 0 => 'a_receber',
@@ -93,8 +85,8 @@ class ExpenseService
                     'name' => $member->name,
                     'email' => $member->email,
                 ],
-                'total_paid' => round($totalPaid, 2),
-                'total_owed' => round($totalOwed, 2),
+                'total_paid' => $totals['total_paid'],
+                'total_owed' => $totals['total_owed'],
                 'net_balance' => $netBalance,
                 'status' => $status,
             ];
@@ -107,6 +99,36 @@ class ExpenseService
             'expenses_count' => $group->expenses()->count(),
             'balances' => $balances,
             'suggested_transfers' => $this->debtSimplification->suggestTransfers($balances),
+        ];
+    }
+
+    /**
+     * Saldo líquido de um participante no grupo (mesma fórmula de calculateBalance).
+     */
+    public function netBalanceForMember(Group $group, User $user): float
+    {
+        return $this->balanceTotalsForMember($group, $user->id)['net_balance'];
+    }
+
+    /**
+     * @return array{total_paid: float, total_owed: float, net_balance: float}
+     */
+    private function balanceTotalsForMember(Group $group, int $userId): array
+    {
+        $totalPaid = (float) $group->expenses()->where('paid_by', $userId)->sum('amount');
+
+        $totalOwed = (float) ExpenseSplit::where('user_id', $userId)
+            ->whereHas('expense', fn ($q) => $q->where('group_id', $group->id))
+            ->sum('amount');
+
+        // Acertos: quem pagou reduz a dívida (sobe o saldo); quem recebeu reduz o crédito (desce o saldo).
+        $totalSettledPaid = (float) $group->settlements()->where('paid_by', $userId)->sum('amount');
+        $totalSettledReceived = (float) $group->settlements()->where('paid_to', $userId)->sum('amount');
+
+        return [
+            'total_paid' => round($totalPaid, 2),
+            'total_owed' => round($totalOwed, 2),
+            'net_balance' => round($totalPaid - $totalOwed + $totalSettledPaid - $totalSettledReceived, 2),
         ];
     }
 

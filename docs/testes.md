@@ -50,6 +50,7 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Feature/ProtectedRoutesTest.php` | 401 em todas as rotas protegidas sem token ou com token inválido, e uso do usuário autenticado em `GET` e `POST /api/groups` |
 | `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |
 | `Feature/ExpenseUpdateTest.php` | `PUT /api/expenses/{expense}` com banco em memória: atualização completa da despesa e das parcelas, troca entre `equal`, `exact` e `percentage`, saldos sem resíduos das parcelas antigas, 422 sem alterar nada (valor inválido, pagador ou usuários fora do grupo, soma que não fecha, corpo vazio), 403 para quem não participa do grupo (com prioridade sobre a validação) e 404 |
+| `Feature/GroupMemberRemovalTest.php` | `DELETE /api/groups/{group}/members/{user}`: bloqueia remoção com saldo a pagar/a receber, bloqueia pagador de despesa ativa mesmo quitado, permite remoção com saldo zero e sem ser pagador, mantém 422 do criador e 404 de não-membro |
 
 ## Cobertura
 

@@ -195,9 +195,14 @@ Adiciona um usuário existente ao grupo. Informe `email` **ou** `user_id`. Se am
 
 ### `DELETE /api/groups/{group}/members/{user}`
 
+Só é possível remover um participante com saldo líquido **exatamente zero** e que **não** seja o `paid_by` de nenhuma despesa ativa do grupo.
+
 - **200**: `{"message": "Participante removido do grupo com sucesso."}`
 - **403**: o usuário não participa do grupo, ou é participante e tenta remover outra pessoa.
-- **422**: `{"message": "O criador do grupo não pode ser removido."}`
+- **422**:
+    - `{"message": "O criador do grupo não pode ser removido."}`
+    - `{"message": "Não é possível remover o participante enquanto houver saldo pendente."}`
+    - `{"message": "Não é possível remover o participante que é pagador de uma despesa ativa no grupo."}`
 - **404**: `{"message": "Este usuário não é participante deste grupo."}`
 
 !!! note

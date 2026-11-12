@@ -10,7 +10,7 @@ O **Artel** é uma aplicação de divisão de despesas em grupo, desenvolvida co
 | Área | O que existe hoje |
 |---|---|
 | Grupos | Listar, criar, exibir, renomear e excluir grupos. O criador é adicionado automaticamente como participante. |
-| Participantes | Listar, adicionar (por `email` ou `user_id`) e remover participantes. O criador do grupo não pode ser removido. |
+| Participantes | Listar, adicionar (por `email` ou `user_id`) e remover participantes. O criador não pode ser removido; também é bloqueada a remoção com saldo pendente ou como pagador de despesa ativa. |
 | Despesas | Listar despesas do grupo, registrar, exibir, editar e excluir despesas. |
 | Divisão | Cada despesa pode ser dividida **igualmente** (entre todos os participantes ou só entre os escolhidos), por **valores exatos** ou por **percentuais**, sempre com tratamento de centavos: a soma das parcelas é igual ao valor da despesa. |
 | Saldos | Cálculo de total pago, total devido, saldo líquido e status (`a_receber`, `a_pagar`, `quitado`) por participante. |
