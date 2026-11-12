@@ -45,11 +45,9 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Unit/DebtSimplificationServiceTest.php` | Simplificação de dívidas: cadeia colapsada, lista vazia e conservação de saldos |
 | `Unit/RegisterRequestTest.php` | Regras e mensagens de `RegisterRequest`: e-mail duplicado e confirmação de senha |
 | `Unit/LoginRequestTest.php` | Regras e mensagens de `LoginRequest` e o método `credentials()` |
-| `Unit/ExampleTest.php` | Teste de exemplo do skeleton Laravel |
 | `Feature/AuthTest.php` | Endpoints `/api/auth/*`: cadastro, login (sucesso, 401 e limite de tentativas), `me` e revogação do token no logout |
 | `Feature/GroupAuthorizationTest.php` | Permissões de anônimo, dono, participante e estranho em grupos, participantes, despesas, saldos e quitações: 401 sem token, 403 consistente, 403 antes do 422 e remoção do dono bloqueada com 422 |
 | `Feature/ProtectedRoutesTest.php` | 401 em todas as rotas protegidas sem token ou com token inválido, e uso do usuário autenticado em `GET` e `POST /api/groups` |
-| `Feature/ExampleTest.php` | Teste de exemplo do skeleton: `GET /` retorna 200 |
 | `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |
 | `Feature/ExpenseUpdateTest.php` | `PUT /api/expenses/{expense}` com banco em memória: atualização completa da despesa e das parcelas, troca entre `equal`, `exact` e `percentage`, saldos sem resíduos das parcelas antigas, 422 sem alterar nada (valor inválido, pagador ou usuários fora do grupo, soma que não fecha, corpo vazio), 403 para quem não participa do grupo (com prioridade sobre a validação) e 404 |
 
@@ -65,4 +63,3 @@ php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 
 - **Cobertura de feature concentrada em alguns fluxos.** Autenticação, autorização, divisão personalizada (`ExpenseSplitTest`), quitações e simplificação são exercitadas via HTTP; os demais endpoints são testados apenas com testes unitários e mocks.
 - **Regras centrais com cobertura parcial:** a divisão em centavos (`createExpense`) tem testes com banco de dados em `ExpenseSplitTest`, mas o cálculo de saldo (`calculateBalance`) só é exercitado de forma indireta.
-- **`ExampleTest`** do skeleton Laravel ainda está presente nas duas suítes.
