@@ -14,28 +14,23 @@
         <form method="POST" action="{{ url('/user/register') }}" class="mt-8 space-y-5" novalidate>
             @csrf
 
-            <x-auth.field name="name" label="Nome" autocomplete="name" autofocus />
-            <x-auth.field name="email" label="E-mail" type="email" autocomplete="email" />
-            <x-auth.field
+            <x-form.field name="name" label="Nome" autocomplete="name" autofocus />
+            <x-form.field name="email" label="E-mail" type="email" autocomplete="email" />
+            <x-form.field
                 name="password"
                 label="Senha"
                 type="password"
                 autocomplete="new-password"
                 hint="Use pelo menos 8 caracteres."
             />
-            <x-auth.field
+            <x-form.field
                 name="password_confirmation"
                 label="Confirmar senha"
                 type="password"
                 autocomplete="new-password"
             />
 
-            <button
-                type="submit"
-                class="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2.5 text-base font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
-            >
-                Criar conta
-            </button>
+            <x-button type="submit" class="w-full">Criar conta</x-button>
         </form>
 
         <p class="mt-6 text-sm text-slate-600">

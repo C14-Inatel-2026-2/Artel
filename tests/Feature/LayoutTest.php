@@ -32,6 +32,30 @@ class LayoutTest extends TestCase
         $this->get('/')->assertDontSee('data-toast', false);
     }
 
+    public function test_componente_button_tem_ponteiro_e_transicao_suave_de_cor(): void
+    {
+        $html = Blade::render('<x-button type="submit" data-teste="sim">Salvar</x-button>');
+
+        $this->assertStringContainsString('<button type="submit"', $html);
+        $this->assertStringContainsString('data-teste="sim"', $html);
+        $this->assertStringContainsString('Salvar', $html);
+        $this->assertStringContainsString('cursor-pointer', $html);
+        $this->assertStringContainsString('transition-colors', $html);
+        $this->assertStringContainsString('duration-300', $html);
+        $this->assertStringContainsString('hover:bg-indigo-800', $html);
+    }
+
+    public function test_componente_button_aceita_variante_secundaria_e_link(): void
+    {
+        $secundario = Blade::render('<x-button variant="secondary">Cancelar</x-button>');
+        $link = Blade::render('<x-button href="/groups">Ir</x-button>');
+
+        $this->assertStringContainsString('hover:bg-slate-100', $secundario);
+        $this->assertStringNotContainsString('bg-indigo-600', $secundario);
+        $this->assertStringContainsString('<a href="/groups"', $link);
+        $this->assertStringContainsString('cursor-pointer', $link);
+    }
+
     public function test_layout_disponibiliza_areas_reutilizaveis(): void
     {
         $this->withViewErrors([]);
