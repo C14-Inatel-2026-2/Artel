@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\Settlement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class SettlementTest extends TestCase
@@ -40,6 +41,8 @@ class SettlementTest extends TestCase
             $this->joao->id,
             $this->maria->id,
         ]);
+
+        Sanctum::actingAs($this->owner);
     }
 
     public function test_store_settlement_returns_created_settlement(): void

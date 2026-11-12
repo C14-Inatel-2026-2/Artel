@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\GroupBalanceController;
 use App\Http\Controllers\GroupController;
@@ -16,7 +17,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('groups')->name('groups.')->group(function () {
+Route::prefix('auth')->name('auth.')->group(function () {
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::get('/me', [AuthController::class, 'me'])->name('me');
+    });
+});
+
+Route::middleware('auth:sanctum')->prefix('groups')->name('groups.')->group(function () {
     Route::get('/', [GroupController::class, 'index'])->name('index');
     Route::post('/', [GroupController::class, 'store'])->name('store');
     Route::get('/{group}', [GroupController::class, 'show'])->name('show');
@@ -38,7 +49,7 @@ Route::prefix('groups')->name('groups.')->group(function () {
     Route::post('/{group}/settlements', [SettlementController::class, 'store'])->name('settlements.store');
 });
 
-Route::prefix('expenses')->name('expenses.')->group(function () {
+Route::middleware('auth:sanctum')->prefix('expenses')->name('expenses.')->group(function () {
     Route::get('/{expense}', [ExpenseController::class, 'show'])->name('show');
     Route::put('/{expense}', [ExpenseController::class, 'update'])->name('update');
     Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('destroy');

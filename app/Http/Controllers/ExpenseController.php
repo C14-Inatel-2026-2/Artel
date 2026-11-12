@@ -18,6 +18,8 @@ class ExpenseController extends Controller
 
     public function index(Group $group): JsonResponse
     {
+        $this->authorize('view', $group);
+
         $expenses = $group->expenses()
             ->with(['payer:id,name,email', 'splits.user:id,name,email'])
             ->latest()
@@ -41,6 +43,8 @@ class ExpenseController extends Controller
 
     public function show(Expense $expense): JsonResponse
     {
+        $this->authorize('view', $expense->group);
+
         $expense->load([
             'group:id,name',
             'payer:id,name,email',
@@ -65,6 +69,8 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense): JsonResponse
     {
+        $this->authorize('view', $expense->group);
+
         $this->expenseService->deleteExpense($expense);
 
         return response()->json([
