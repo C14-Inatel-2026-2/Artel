@@ -42,8 +42,8 @@ O servidor local é descrito em [`ci/jenkins/README.md`](https://github.com/C14-
 
 A demo fica em **https://artel-c14.fly.dev** (região `gru`). Health check: `GET /up`.
 
-!!! warning "API sem autenticação"
-    A API pública ainda **não exige login**. Os controllers usam `User::first()` quando não há usuário autenticado (veja [Decisões — P1](decisoes.md#pendentes)). Não use dados reais nesse ambiente.
+!!! warning "Ambiente de demonstração"
+    A API pública exige login e restringe o acesso aos grupos do usuário, mas é um ambiente de demonstração. Não use dados reais nesse ambiente.
 
 ### Pré-requisitos
 

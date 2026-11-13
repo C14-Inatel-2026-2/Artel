@@ -6,9 +6,9 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 
 - URL: [https://artel-c14.fly.dev](https://artel-c14.fly.dev)
 - Health: `GET /up`
-- API (ex.): `GET /api/groups`
+- API (ex.): `POST /api/auth/login` e, com o token, `GET /api/groups`
 
-> **Atenção:** a API pública ainda **não tem autenticação**. Não use dados reais.
+> **Atenção:** a demo é um ambiente de demonstração. Não use dados reais.
 >
 > Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Um novo build da `main` no Jenkins volta a publicar no Fly. Veja [CI/CD e deploy](docs/ci-cd.md).
 
@@ -52,6 +52,17 @@ A imagem Docker é de produção (sem dependências de desenvolvimento), então 
 ## CI/CD
 
 A pipeline roda no Jenkins (`Jenkinsfile`): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Deploy e Smoke Test** no Fly.io. O servidor Jenkins local está em [`ci/jenkins/`](ci/jenkins/README.md).
+
+## Refactorings
+
+| Smell | Refactoring | Por quê | PR |
+|---|---|---|---|
+| Código duplicado: `$group->members()->where(...)->exists()` repetido em `GroupMemberController`, `StoreExpenseRequest`, `StoreSettlementRequest` e `GroupPolicy` | Extract Method (`Group::hasMember`) | Centraliza a checagem de participação no grupo, evitando drift entre controllers, Form Requests e policies | #82 |
+| Dead code: model `GroupMember` nunca era instanciado — a relação `group_members` já é manipulada via `Group::members()` (pivô `belongsToMany`) | Remove Dead Code | Remove uma classe sem uso real, que só confundia quem lia a arquitetura do projeto (documentada em `docs/arquitetura.md` como não utilizada) | #82 |
+| Controller gordo: `SettlementController` misturava HTTP com listagem/criação de quitações | Extract Class (`SettlementService`) | Isola a regra de acertos na camada de serviço, no mesmo padrão de `ExpenseService` | *#87* |
+| Long Method: `DebtSimplificationService::suggestTransfers` misturava partição de saldos e matching de transferências | Extract Method (`partitionBalances`, `matchTransfers`) | Separa as etapas do algoritmo de simplificação, facilitando leitura e manutenção | *#87* |
+| Dead code: `ExampleTest` do skeleton Laravel (Feature e Unit) sem valor de regressão | Remove Dead Code | Elimina placeholders da suíte e a documentação que os tratava como testes reais | TBD |
+| Switch/`match` em `split_type` concentrava equal/exact/percentage dentro de `ExpenseService` | Replace Conditional with Polymorphism (Strategy: `EqualSplitStrategy`, `ExactSplitStrategy`, `PercentageSplitStrategy` + factory) | Cada tipo de divisão fica isolado e testável; `ExpenseService` só orquestra create/update/balance | TBD |
 
 ## Documentação
 

@@ -11,13 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -62,5 +63,21 @@ class User extends Authenticatable
     public function expenseSplits(): HasMany
     {
         return $this->hasMany(ExpenseSplit::class);
+    }
+
+    /**
+     * Acertos pagos pelo usuário.
+     */
+    public function settlementsPaid(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'paid_by');
+    }
+
+    /**
+     * Acertos recebidos pelo usuário.
+     */
+    public function settlementsReceived(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'paid_to');
     }
 }
