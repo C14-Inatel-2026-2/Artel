@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Http\Controllers\GroupBalanceController;
 use App\Models\Group;
-use App\Services\ExpenseService;
+use App\Services\GroupBalanceService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
@@ -18,7 +18,7 @@ class GroupBalanceControllerTest extends TestCase
     public function test_balance_index_returns_balance_data_successfully(): void
     {
         // Arrange
-        $mockService = $this->createMock(ExpenseService::class);
+        $mockService = $this->createMock(GroupBalanceService::class);
         $mockService->expects($this->once())
             ->method('calculateBalance')
             ->willReturn([
@@ -45,7 +45,7 @@ class GroupBalanceControllerTest extends TestCase
     public function test_balance_index_fails_when_service_throws_exception(): void
     {
         // Arrange
-        $mockService = $this->createMock(ExpenseService::class);
+        $mockService = $this->createMock(GroupBalanceService::class);
         $mockService->expects($this->once())
             ->method('calculateBalance')
             ->willThrowException(new InvalidArgumentException('Grupo sem dados financeiros'));
@@ -63,7 +63,7 @@ class GroupBalanceControllerTest extends TestCase
 
     public function test_balance_index_does_not_calculate_when_authorization_fails(): void
     {
-        $mockService = $this->createMock(ExpenseService::class);
+        $mockService = $this->createMock(GroupBalanceService::class);
         $mockService->expects($this->never())->method('calculateBalance');
 
         $controller = new GroupBalanceController($mockService);
