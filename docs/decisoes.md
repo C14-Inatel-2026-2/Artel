@@ -22,10 +22,11 @@ Esta página registra as decisões **refletidas no código atual** e as questõe
 | D14 | **Cadastro e login disponíveis como endpoints JSON** (`/api/auth/*`), mantendo as rotas web (`/user/*`) com sessão. Ambos usam `RegisterRequest` e `LoginRequest` | `routes/api.php`, `routes/user.php`, `app/Http/Requests/` |
 | D15 | **Autorização por grupo via `GroupPolicy`**: apenas dono e participantes acessam o grupo, suas despesas, saldos e quitações; renomear e excluir o grupo é exclusivo do dono. Respostas `403` com `{"message": "Acesso negado."}`. Nos endpoints com Form Request, a autorização fica no `authorize()` do request para rodar antes da validação | `app/Policies/GroupPolicy.php`, controllers de grupos, participantes, despesas, saldos e quitações, `UpdateGroupRequest`, `AddGroupMemberRequest`, `StoreExpenseRequest`, `StoreSettlementRequest`, `bootstrap/app.php`. Resolve a pendência P2. |
 | D16 | **Edição de despesa por substituição completa** (`PUT /api/expenses/{expense}`), com recálculo das parcelas em transação; só participantes do grupo da despesa podem editar | `ExpenseService::updateExpense`, `UpdateExpenseRequest`, `ExpenseController::update` |
+| D17 | **Remoção de participante bloqueada com saldo pendente ou como pagador de despesa ativa**: o `net_balance` deve ser exatamente zero e o membro não pode ser `paid_by` de nenhuma despesa do grupo; casos bloqueados respondem `422` com mensagem clara | `GroupMemberController::destroy`, `ExpenseService::netBalanceForMember` |
 
 ## Pendentes
 
 | # | Questão | Situação atual |
 |---|---|---|
-| P6 | **Parcelas e composição do grupo** | A edição recalcula as parcelas com os participantes atuais, e as despesas não editadas não mudam quando alguém entra ou sai do grupo. Falta definir se a edição de uma despesa `equal` sem `participants` deveria manter os participantes originais. |
+| P6 | **Parcelas e composição do grupo** | A edição recalcula as parcelas com os participantes atuais, e as despesas não editadas não mudam quando alguém entra ou sai do grupo. A remoção de participantes com saldo ou como pagadores ativos já é bloqueada (D17). Falta definir se a edição de uma despesa `equal` sem `participants` deveria manter os participantes originais. |
 | P7 | **Integração contínua, cobertura de testes e deploy automatizado** | Pipeline no `Jenkinsfile`: Build → Quality → Testes → Package → Deploy e Smoke Test (Fly, só `main`) (veja [CI/CD e deploy](ci-cd.md)). Falta registrar as evidências do Jenkins ([#29](https://github.com/C14-Inatel-2026-2/Artel/issues/29)). |

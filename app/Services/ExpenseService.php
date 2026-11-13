@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\SplitType;
 use App\Models\Expense;
 use App\Models\ExpenseSplit;
 use App\Models\Group;
+use App\Models\User;
+use App\Services\ExpenseSplits\ExpenseSplitStrategyFactory;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -12,6 +15,7 @@ class ExpenseService
 {
     public function __construct(
         protected DebtSimplificationService $debtSimplification = new DebtSimplificationService,
+        protected ExpenseSplitStrategyFactory $splitStrategyFactory = new ExpenseSplitStrategyFactory,
     ) {}
 
     public function createExpense(Group $group, array $data): Expense
@@ -19,17 +23,11 @@ class ExpenseService
         [$splitType, $shares] = $this->buildSplit($group, $data);
 
         return DB::transaction(function () use ($group, $data, $splitType, $shares) {
-            $expense = Expense::create([
-                'description' => $data['description'],
-                'amount' => $data['amount'],
-                'paid_by' => $data['paid_by'],
-                'split_type' => $splitType,
-                'group_id' => $group->id,
-            ]);
+            $expense = Expense::create($this->expenseAttributes($data, $splitType) + ['group_id' => $group->id]);
 
             $this->createSplits($expense, $shares);
 
-            return $expense->load(['payer:id,name,email', 'splits.user:id,name,email']);
+            return $this->withRelations($expense);
         });
     }
 
@@ -38,17 +36,12 @@ class ExpenseService
         [$splitType, $shares] = $this->buildSplit($expense->group, $data);
 
         return DB::transaction(function () use ($expense, $data, $splitType, $shares) {
-            $expense->update([
-                'description' => $data['description'],
-                'amount' => $data['amount'],
-                'paid_by' => $data['paid_by'],
-                'split_type' => $splitType,
-            ]);
+            $expense->update($this->expenseAttributes($data, $splitType));
 
             $expense->splits()->delete();
             $this->createSplits($expense, $shares);
 
-            return $expense->load(['payer:id,name,email', 'splits.user:id,name,email']);
+            return $this->withRelations($expense);
         });
     }
 
@@ -63,40 +56,11 @@ class ExpenseService
 
     public function calculateBalance(Group $group): array
     {
-        $members = $group->members()->select('users.id', 'users.name', 'users.email')->get();
-        $balances = [];
-
-        foreach ($members as $member) {
-            $totalPaid = (float) $group->expenses()->where('paid_by', $member->id)->sum('amount');
-
-            $totalOwed = (float) ExpenseSplit::where('user_id', $member->id)
-                ->whereHas('expense', fn ($q) => $q->where('group_id', $group->id))
-                ->sum('amount');
-
-            // Acertos: quem pagou reduz a dívida (sobe o saldo); quem recebeu reduz o crédito (desce o saldo).
-            $totalSettledPaid = (float) $group->settlements()->where('paid_by', $member->id)->sum('amount');
-            $totalSettledReceived = (float) $group->settlements()->where('paid_to', $member->id)->sum('amount');
-
-            $netBalance = round($totalPaid - $totalOwed + $totalSettledPaid - $totalSettledReceived, 2);
-
-            $status = match (true) {
-                $netBalance > 0 => 'a_receber',
-                $netBalance < 0 => 'a_pagar',
-                default => 'quitado',
-            };
-
-            $balances[] = [
-                'user' => [
-                    'id' => $member->id,
-                    'name' => $member->name,
-                    'email' => $member->email,
-                ],
-                'total_paid' => round($totalPaid, 2),
-                'total_owed' => round($totalOwed, 2),
-                'net_balance' => $netBalance,
-                'status' => $status,
-            ];
-        }
+        $balances = $group->members()
+            ->select('users.id', 'users.name', 'users.email')
+            ->get()
+            ->map(fn (User $member) => $this->memberBalance($group, $member))
+            ->all();
 
         return [
             'group_id' => $group->id,
@@ -108,6 +72,65 @@ class ExpenseService
         ];
     }
 
+    /**
+     * Saldo líquido de um participante no grupo (mesma fórmula de calculateBalance).
+     */
+    public function netBalanceForMember(Group $group, User $user): float
+    {
+        return $this->memberBalance($group, $user)['net_balance'];
+    }
+
+    private function memberBalance(Group $group, User $member): array
+    {
+        $totalPaid = (float) $group->expenses()->where('paid_by', $member->id)->sum('amount');
+
+        $totalOwed = (float) ExpenseSplit::where('user_id', $member->id)
+            ->whereHas('expense', fn ($q) => $q->where('group_id', $group->id))
+            ->sum('amount');
+
+        // Acertos: quem pagou reduz a dívida (sobe o saldo); quem recebeu reduz o crédito (desce o saldo).
+        $totalSettledPaid = (float) $group->settlements()->where('paid_by', $member->id)->sum('amount');
+        $totalSettledReceived = (float) $group->settlements()->where('paid_to', $member->id)->sum('amount');
+
+        $netBalance = round($totalPaid - $totalOwed + $totalSettledPaid - $totalSettledReceived, 2);
+
+        return [
+            'user' => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+            ],
+            'total_paid' => round($totalPaid, 2),
+            'total_owed' => round($totalOwed, 2),
+            'net_balance' => $netBalance,
+            'status' => $this->balanceStatus($netBalance),
+        ];
+    }
+
+    private function balanceStatus(float $netBalance): string
+    {
+        return match (true) {
+            $netBalance > 0 => 'a_receber',
+            $netBalance < 0 => 'a_pagar',
+            default => 'quitado',
+        };
+    }
+
+    private function expenseAttributes(array $data, string $splitType): array
+    {
+        return [
+            'description' => $data['description'],
+            'amount' => $data['amount'],
+            'paid_by' => $data['paid_by'],
+            'split_type' => $splitType,
+        ];
+    }
+
+    private function withRelations(Expense $expense): Expense
+    {
+        return $expense->load(['payer:id,name,email', 'splits.user:id,name,email']);
+    }
+
     private function buildSplit(Group $group, array $data): array
     {
         $members = $group->members;
@@ -116,12 +139,13 @@ class ExpenseService
             throw new InvalidArgumentException('O grupo não possui participantes para divisão da despesa.');
         }
 
-        $splitType = $data['split_type'] ?? 'equal';
+        $splitType = $data['split_type'] ?? SplitType::equal->value;
         $totalCents = (int) round($data['amount'] * 100);
+        $strategy = $this->splitStrategyFactory->make($splitType);
 
         return [
             $splitType,
-            $this->calculateShares($members->pluck('id')->all(), $totalCents, $splitType, $data),
+            $strategy->calculateShares($members->pluck('id')->all(), $totalCents, $data),
         ];
     }
 
@@ -134,95 +158,5 @@ class ExpenseService
                 'amount' => $cents / 100,
             ]);
         }
-    }
-
-    private function calculateShares(array $memberIds, int $totalCents, string $splitType, array $data): array
-    {
-        return match ($splitType) {
-            'exact' => $this->exactShares($data['splits'], $totalCents),
-            'percentage' => $this->percentageShares($data['splits'], $totalCents),
-            default => $this->equalShares($data['participants'] ?? $memberIds, $totalCents),
-        };
-    }
-
-    private function equalShares(array $userIds, int $totalCents): array
-    {
-        $userIds = array_values($userIds);
-        $baseCents = intdiv($totalCents, count($userIds));
-        $remainder = $totalCents % count($userIds);
-        $shares = [];
-
-        foreach ($userIds as $index => $userId) {
-            $shares[$userId] = $baseCents + ($index < $remainder ? 1 : 0);
-        }
-
-        return $shares;
-    }
-
-    private function exactShares(array $splits, int $totalCents): array
-    {
-        $shares = [];
-
-        foreach ($splits as $split) {
-            $shares[$split['user_id']] = (int) round($split['amount'] * 100);
-        }
-
-        $sumCents = array_sum($shares);
-
-        if ($sumCents !== $totalCents) {
-            throw new InvalidArgumentException(sprintf(
-                'A soma das parcelas (R$ %s) é diferente do valor da despesa (R$ %s).',
-                $this->formatCents($sumCents),
-                $this->formatCents($totalCents),
-            ));
-        }
-
-        return $shares;
-    }
-
-    private function percentageShares(array $splits, int $totalCents): array
-    {
-        $hundredths = [];
-
-        foreach ($splits as $split) {
-            $hundredths[$split['user_id']] = (int) round($split['percentage'] * 100);
-        }
-
-        $sumHundredths = array_sum($hundredths);
-
-        if ($sumHundredths !== 10000) {
-            throw new InvalidArgumentException(sprintf(
-                'A soma dos percentuais (%s%%) deve ser exatamente 100%%.',
-                number_format($sumHundredths / 100, 2, ',', '.'),
-            ));
-        }
-
-        $shares = [];
-        $remainders = [];
-
-        foreach ($hundredths as $userId => $value) {
-            $product = $totalCents * $value;
-            $shares[$userId] = intdiv($product, 10000);
-            $remainders[$userId] = $product % 10000;
-        }
-
-        $leftoverCents = $totalCents - array_sum($shares);
-        arsort($remainders);
-
-        foreach (array_keys($remainders) as $userId) {
-            if ($leftoverCents <= 0) {
-                break;
-            }
-
-            $shares[$userId]++;
-            $leftoverCents--;
-        }
-
-        return $shares;
-    }
-
-    private function formatCents(int $cents): string
-    {
-        return number_format($cents / 100, 2, ',', '.');
     }
 }
