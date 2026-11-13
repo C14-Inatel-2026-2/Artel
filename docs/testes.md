@@ -41,7 +41,7 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 |---|---|
 | `Unit/AddGroupMemberRequestTest.php` | Regras de `AddGroupMemberRequest` e falha quando nenhum identificador é enviado |
 | `Unit/ExpenseControllerTest.php` | `store` com `ExpenseService` mockado: 201 em sucesso e 422 em `InvalidArgumentException` |
-| `Unit/ExpenseServiceTest.php` | Exceção ao criar despesa em grupo sem participantes |
+| `Unit/ExpenseServiceTest.php` | Divisão equal (centavos residuais), exact e percentage; saldo líquido com quitações; simplificação com múltiplos devedores/credores; exceção em grupo sem participantes |
 | `Unit/GroupBalanceControllerTest.php` | `index` com service e `Gate` mockados: retorno 200, propagação de exceção e saldo não calculado quando a autorização falha |
 | `Unit/GroupControllerTest.php` | `destroy` com `Gate` mockado: resposta de sucesso, propagação de exceção e grupo não excluído quando a autorização falha |
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
@@ -69,4 +69,4 @@ php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 ## Limitações conhecidas
 
 - **Cobertura de feature concentrada em alguns fluxos.** Autenticação, autorização, divisão personalizada (`ExpenseSplitTest`), quitações e simplificação são exercitadas via HTTP; os demais endpoints são testados apenas com testes unitários e mocks.
-- **Regras centrais com cobertura parcial:** a divisão em centavos (`createExpense`) tem testes com banco de dados em `ExpenseSplitTest`, mas o cálculo de saldo (`calculateBalance`) só é exercitado de forma indireta.
+- **Regras centrais também cobertas em unit:** divisão em centavos, saldo com quitações e simplificação são exercitados diretamente em `ExpenseServiceTest` (além dos feature tests HTTP equivalentes).
