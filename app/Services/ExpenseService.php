@@ -139,7 +139,7 @@ class ExpenseService
             throw new InvalidArgumentException('O grupo não possui participantes para divisão da despesa.');
         }
 
-        $splitType = $data['split_type'] ?? SplitType::equal->value;
+        $splitType = $data['split_type'] ?? SplitType::Equal->value;
         $totalCents = (int) round($data['amount'] * 100);
         $strategy = $this->splitStrategyFactory->make($splitType);
 

@@ -40,12 +40,13 @@ A imagem é de produção (`--no-dev`); testes e lint rodam no ambiente local ou
 Requisitos: PHP 8.4+ (`pdo_sqlite`), Composer, GNU Make e, para a UI, Node.js + npm.
 
 ```bash
+make test     # PHPUnit
+make lint     # Laravel Pint (somente leitura)
+make analyse  # Larastan (análise estática)
+make audit    # vulnerabilidades nas dependências
 composer setup      # deps, .env, chave, migrations e build dos assets (primeira vez)
 make install        # composer install (dependências PHP)
 make serve          # http://127.0.0.1:8000
-make test           # PHPUnit
-make lint           # Laravel Pint (somente leitura)
-make audit          # vulnerabilidades nas dependências PHP
 make docs-serve     # MkDocs em http://127.0.0.1:8001 (requer .venv ativo)
 ```
 

@@ -29,6 +29,7 @@ Os atalhos padronizam tarefas de instalação, execução de servidor, migraçõ
 | `make migrate-status` | `php artisan migrate:status` | Exibe o status de cada migration sem alterar o banco. |
 | `make lint` | `php vendor/bin/pint --test` | Analisa a formatação do código com Laravel Pint (somente leitura). |
 | `make lint-fix` | `php vendor/bin/pint` | Corrige automaticamente a formatação do código com Laravel Pint. |
+| `make analyse` | `php vendor/bin/phpstan analyse` | Análise estática com Larastan (tipagem e inconsistências em `app/`). |
 | `make audit` | `composer audit` | Verifica vulnerabilidades de segurança nas dependências PHP. |
 | `make docs-serve` | `mkdocs serve -a ...:8001` | Inicia o servidor local da documentação MkDocs. |
 | `make docs-build` | `mkdocs build --strict` | Compila a documentação estática com validação estrita. |
@@ -137,6 +138,20 @@ Executa o **Laravel Pint** aplicando automaticamente as correções de formataç
   ```bash
   make lint-fix
   ```
+
+---
+
+### `analyse`
+
+Executa o **Larastan** (`phpstan analyse`) com a configuração de `phpstan.neon` (nível 5, paths `app/`). A análise falha com exit code diferente de zero se houver erros de tipagem ou inconsistências.
+
+- **Pré-requisitos:** Dependências de desenvolvimento instaladas (`vendor/bin/phpstan` e `phpstan.neon`).
+- **Exemplo de uso:**
+  ```bash
+  make analyse
+  ```
+
+Ordem sugerida de checagens locais: `make lint` → `make analyse` → `make audit` → `make test`.
 
 ---
 
