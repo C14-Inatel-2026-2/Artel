@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AddGroupMemberRequest;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\ExpenseService;
 use Illuminate\Http\JsonResponse;
 
 class GroupMemberController extends Controller
 {
+    public function __construct(
+        protected ExpenseService $expenseService
+    ) {}
+
     /**
      * Lista todos os membros do grupo.
      */
@@ -70,6 +75,18 @@ class GroupMemberController extends Controller
             return response()->json([
                 'message' => 'Este usuário não é participante deste grupo.',
             ], 404);
+        }
+
+        if ($this->expenseService->netBalanceForMember($group, $user) !== 0.0) {
+            return response()->json([
+                'message' => 'Não é possível remover o participante enquanto houver saldo pendente.',
+            ], 422);
+        }
+
+        if ($group->expenses()->where('paid_by', $user->id)->exists()) {
+            return response()->json([
+                'message' => 'Não é possível remover o participante que é pagador de uma despesa ativa no grupo.',
+            ], 422);
         }
 
         $group->members()->detach($user->id);

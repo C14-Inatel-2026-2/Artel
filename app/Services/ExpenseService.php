@@ -72,6 +72,14 @@ class ExpenseService
         ];
     }
 
+    /**
+     * Saldo líquido de um participante no grupo (mesma fórmula de calculateBalance).
+     */
+    public function netBalanceForMember(Group $group, User $user): float
+    {
+        return $this->memberBalance($group, $user)['net_balance'];
+    }
+
     private function memberBalance(Group $group, User $member): array
     {
         $totalPaid = (float) $group->expenses()->where('paid_by', $member->id)->sum('amount');
@@ -131,7 +139,7 @@ class ExpenseService
             throw new InvalidArgumentException('O grupo não possui participantes para divisão da despesa.');
         }
 
-        $splitType = $data['split_type'] ?? SplitType::Equal->value;
+        $splitType = $data['split_type'] ?? SplitType::equal->value;
         $totalCents = (int) round($data['amount'] * 100);
         $strategy = $this->splitStrategyFactory->make($splitType);
 
