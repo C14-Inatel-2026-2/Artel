@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\SplitType;
 use App\Models\Group;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,7 +20,7 @@ class StoreExpenseRequest extends FormRequest
             'description' => ['required', 'string', 'min:3', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'paid_by' => ['required', 'integer', 'exists:users,id'],
-            'split_type' => ['nullable', 'string', Rule::in(['equal', 'exact', 'percentage'])],
+            'split_type' => ['nullable', 'string', Rule::in(SplitType::values())],
             'participants' => ['nullable', 'array', 'min:1'],
             'participants.*' => ['integer', 'distinct', 'exists:users,id'],
             'splits' => ['required_if:split_type,exact,percentage', 'array', 'min:1'],
