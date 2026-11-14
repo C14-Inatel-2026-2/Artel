@@ -51,7 +51,6 @@ class ExpenseService
             return (bool) $expense->delete();
         });
     }
-
     private function expenseAttributes(array $data, string $splitType): array
     {
         return [

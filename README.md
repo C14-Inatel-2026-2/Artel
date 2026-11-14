@@ -12,56 +12,84 @@ Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenhari
 >
 > Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Um novo build da `main` no Jenkins volta a publicar no Fly. Veja [CI/CD e deploy](docs/ci-cd.md).
 
-## Executando com Docker
+## Guia de execução
 
-Requisitos: Docker e Docker Compose. PHP, Composer, Apache e SQLite rodam dentro do container.
+Instruções práticas de instalação, execução (Docker e local), testes, lint e documentação. Detalhes em [`docs/`](docs/index.md).
+
+### Docker Compose
+
+Requisitos: Docker e Docker Compose. PHP, Composer, Apache e SQLite rodam no container.
 
 ```bash
 docker compose up -d --build
 ```
 
-A aplicação estará disponível em [http://localhost:8000](http://localhost:8000).
+App em [http://localhost:8000](http://localhost:8000). O entrypoint aplica as migrations ao subir.
 
 ```bash
-docker compose ps                                     # status dos containers
+docker compose ps                                     # status
 docker compose exec app php artisan migrate:status    # migrations
 docker compose logs -f app                            # logs
 docker compose down                                   # parar
 ```
 
-## Executando localmente
+A imagem é de produção (`--no-dev`); testes e lint rodam no ambiente local ou na pipeline — não dentro do container.
 
-Requisitos: PHP 8.4+ (`pdo_sqlite`), Composer e, para a interface web, Node.js + npm.
+### Localmente (Makefile)
 
-```bash
-composer setup   # dependências, .env, chave, migrations e build dos assets
-make serve       # http://127.0.0.1:8000
-```
-
-## Testes e qualidade
+Requisitos: PHP 8.4+ (`pdo_sqlite`), Composer, GNU Make e, para a UI, Node.js + npm.
 
 ```bash
-make test    # PHPUnit
-make lint    # Laravel Pint (somente leitura)
-make audit   # vulnerabilidades nas dependências
+make test     # PHPUnit
+make lint     # Laravel Pint (somente leitura)
+make analyse  # Larastan (análise estática)
+make audit    # vulnerabilidades nas dependências
+composer setup      # deps, .env, chave, migrations e build dos assets (primeira vez)
+make install        # composer install (dependências PHP)
+make serve          # http://127.0.0.1:8000
+make docs-serve     # MkDocs em http://127.0.0.1:8001 (requer .venv ativo)
 ```
 
-A imagem Docker é de produção (sem dependências de desenvolvimento), então os testes rodam localmente ou na pipeline.
+Outros atalhos: `make help`, `make migrate`, `make migrate-status`, `make lint-fix`, `make docs-build`. Guia completo: [Comandos úteis](docs/comandos.md). Setup do MkDocs: [Documentação](docs/documentacao.md).
 
-## CI/CD
+### CI/CD (Jenkins)
 
-A pipeline roda no Jenkins (`Jenkinsfile`): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Deploy e Smoke Test** no Fly.io. O servidor Jenkins local está em [`ci/jenkins/`](ci/jenkins/README.md).
+Pipeline definida em [`Jenkinsfile`](Jenkinsfile): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Deploy e Smoke Test** no Fly.io.
+
+- Visão geral: [CI/CD e deploy](docs/ci-cd.md)
+- Servidor local: [`ci/jenkins/`](ci/jenkins/README.md)
 
 ## Refactorings
 
+Consolidação da US09: cada integrante aplicou ≥2 refactorings. Formato: smell, técnica, motivo e link do PR.
+
+### Psychovv
+
 | Smell | Refactoring | Por quê | PR |
 |---|---|---|---|
-| Código duplicado: `$group->members()->where(...)->exists()` repetido em `GroupMemberController`, `StoreExpenseRequest`, `StoreSettlementRequest` e `GroupPolicy` | Extract Method (`Group::hasMember`) | Centraliza a checagem de participação no grupo, evitando drift entre controllers, Form Requests e policies | #82 |
-| Dead code: model `GroupMember` nunca era instanciado — a relação `group_members` já é manipulada via `Group::members()` (pivô `belongsToMany`) | Remove Dead Code | Remove uma classe sem uso real, que só confundia quem lia a arquitetura do projeto (documentada em `docs/arquitetura.md` como não utilizada) | #82 |
-| Controller gordo: `SettlementController` misturava HTTP com listagem/criação de quitações | Extract Class (`SettlementService`) | Isola a regra de acertos na camada de serviço, no mesmo padrão de `ExpenseService` | *#87* |
-| Long Method: `DebtSimplificationService::suggestTransfers` misturava partição de saldos e matching de transferências | Extract Method (`partitionBalances`, `matchTransfers`) | Separa as etapas do algoritmo de simplificação, facilitando leitura e manutenção | *#87* |
-| Dead code: `ExampleTest` do skeleton Laravel (Feature e Unit) sem valor de regressão | Remove Dead Code | Elimina placeholders da suíte e a documentação que os tratava como testes reais | TBD |
-| Switch/`match` em `split_type` concentrava equal/exact/percentage dentro de `ExpenseService` | Replace Conditional with Polymorphism (Strategy: `EqualSplitStrategy`, `ExactSplitStrategy`, `PercentageSplitStrategy` + factory) | Cada tipo de divisão fica isolado e testável; `ExpenseService` só orquestra create/update/balance | TBD |
+| Código duplicado: `$group->members()->where(...)->exists()` repetido em `GroupMemberController`, `StoreExpenseRequest`, `StoreSettlementRequest` e `GroupPolicy` | Extract Method (`Group::hasMember`) | Centraliza a checagem de participação no grupo, evitando drift entre controllers, Form Requests e policies | [#82](https://github.com/C14-Inatel-2026-2/Artel/pull/82) |
+| Dead code: model `GroupMember` nunca era instanciado — a relação `group_members` já é manipulada via `Group::members()` (pivô `belongsToMany`) | Remove Dead Code | Remove uma classe sem uso real, que só confundia quem lia a arquitetura do projeto (documentada em `docs/arquitetura.md` como não utilizada) | [#82](https://github.com/C14-Inatel-2026-2/Artel/pull/82) |
+
+### Davizin06
+
+| Smell | Refactoring | Por quê | PR |
+|---|---|---|---|
+| Controller gordo: `SettlementController` misturava HTTP com listagem/criação de quitações | Extract Class (`SettlementService`) | Isola a regra de acertos na camada de serviço, no mesmo padrão de `ExpenseService` | [#87](https://github.com/C14-Inatel-2026-2/Artel/pull/87) |
+| Long Method: `DebtSimplificationService::suggestTransfers` misturava partição de saldos e matching de transferências | Extract Method (`partitionBalances`, `matchTransfers`) | Separa as etapas do algoritmo de simplificação, facilitando leitura e manutenção | [#87](https://github.com/C14-Inatel-2026-2/Artel/pull/87) |
+
+### pudimih
+
+| Smell | Refactoring | Por quê | PR |
+|---|---|---|---|
+| Dead code: `ExampleTest` do skeleton Laravel (Feature e Unit) sem valor de regressão | Remove Dead Code | Elimina placeholders da suíte e a documentação que os tratava como testes reais | [#88](https://github.com/C14-Inatel-2026-2/Artel/pull/88) |
+| Switch/`match` em `split_type` concentrava equal/exact/percentage dentro de `ExpenseService` | Replace Conditional with Polymorphism (Strategy: `EqualSplitStrategy`, `ExactSplitStrategy`, `PercentageSplitStrategy` + factory) | Cada tipo de divisão fica isolado e testável; `ExpenseService` só orquestra create/update/balance | [#88](https://github.com/C14-Inatel-2026-2/Artel/pull/88) |
+
+### Jhoncy6
+
+| Smell | Refactoring | Por quê | PR |
+|---|---|---|---|
+| Long Method e código duplicado em `ExpenseService`: `calculateBalance` misturava saldo/status/resumo, e create/update repetiam atributos e eager load | Extract Method (`memberBalance`, `balanceStatus`, `expenseAttributes`, `withRelations`) | Encurta `calculateBalance` e remove a duplicação entre criar e editar despesa, sem mudar o comportamento | [#92](https://github.com/C14-Inatel-2026-2/Artel/pull/92) |
+| Primitive obsession: strings `"equal"`, `"exact"` e `"percentage"` soltas na request, no serviço e na factory | Replace Magic String with Enum (`SplitType`) | Tipa os tipos de divisão num enum único, evitando typos e espalhamento de literais | [#92](https://github.com/C14-Inatel-2026-2/Artel/pull/92) |
 
 ## Documentação
 

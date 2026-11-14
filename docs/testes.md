@@ -1,6 +1,6 @@
 # Testes
 
-A suíte usa **PHPUnit 12** (via `php artisan test`) e **Mockery** para mocks.
+A suíte usa **PHPUnit 12** (via `php artisan test`) e **Mockery** para mocks. A análise estática de tipagem em `app/` é feita com **Larastan** (via `make analyse`; veja [Comandos](comandos.md#analyse)).
 
 ## Executar
 
@@ -21,6 +21,12 @@ php artisan test --testsuite=Unit
 php artisan test tests/Unit/ExpenseControllerTest.php
 ```
 
+Análise estática (independente da suíte PHPUnit):
+
+```bash
+make analyse
+```
+
 ## Ambiente de teste
 
 O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feature`) e sobrescreve as variáveis de ambiente, entre elas:
@@ -35,7 +41,7 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 |---|---|
 | `Unit/AddGroupMemberRequestTest.php` | Regras de `AddGroupMemberRequest` e falha quando nenhum identificador é enviado |
 | `Unit/ExpenseControllerTest.php` | `store` com `ExpenseService` mockado: 201 em sucesso e 422 em `InvalidArgumentException` |
-| `Unit/ExpenseServiceTest.php` | Exceção ao criar despesa em grupo sem participantes |
+| `Unit/ExpenseServiceTest.php` | Divisão equal (centavos residuais), exact e percentage; saldo líquido com quitações; simplificação com múltiplos devedores/credores; exceção em grupo sem participantes |
 | `Unit/GroupBalanceControllerTest.php` | `index` com service e `Gate` mockados: retorno 200, propagação de exceção e saldo não calculado quando a autorização falha |
 | `Unit/GroupControllerTest.php` | `destroy` com `Gate` mockado: resposta de sucesso, propagação de exceção e grupo não excluído quando a autorização falha |
 | `Unit/GroupPolicyTest.php` | `GroupPolicy::update` para dono e não dono |
@@ -50,6 +56,7 @@ O `phpunit.xml` define as suítes `Unit` (`tests/Unit`) e `Feature` (`tests/Feat
 | `Feature/ProtectedRoutesTest.php` | 401 em todas as rotas protegidas sem token ou com token inválido, e uso do usuário autenticado em `GET` e `POST /api/groups` |
 | `Feature/ExpenseSplitTest.php` | `POST /api/groups/{group}/expenses` com banco em memória: divisão `equal` (todos e subconjunto, com resto de centavos), `exact` e `percentage` (soma correta e incorreta, sem gravar nada em caso de erro), usuários fora do grupo, repetidos ou com valores inválidos, e saldos refletindo a divisão personalizada |
 | `Feature/ExpenseUpdateTest.php` | `PUT /api/expenses/{expense}` com banco em memória: atualização completa da despesa e das parcelas, troca entre `equal`, `exact` e `percentage`, saldos sem resíduos das parcelas antigas, 422 sem alterar nada (valor inválido, pagador ou usuários fora do grupo, soma que não fecha, corpo vazio), 403 para quem não participa do grupo (com prioridade sobre a validação) e 404 |
+| `Feature/GroupMemberRemovalTest.php` | `DELETE /api/groups/{group}/members/{user}`: bloqueia remoção com saldo a pagar/a receber, bloqueia pagador de despesa ativa mesmo quitado, permite remoção com saldo zero e sem ser pagador, mantém 422 do criador e 404 de não-membro |
 
 ## Cobertura
 
@@ -62,4 +69,4 @@ php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 ## Limitações conhecidas
 
 - **Cobertura de feature concentrada em alguns fluxos.** Autenticação, autorização, divisão personalizada (`ExpenseSplitTest`), quitações e simplificação são exercitadas via HTTP; os demais endpoints são testados apenas com testes unitários e mocks.
-- **Regras centrais com cobertura parcial:** a divisão em centavos (`createExpense`) tem testes com banco de dados em `ExpenseSplitTest`, mas o cálculo de saldo (`calculateBalance`) só é exercitado de forma indireta.
+- **Regras centrais também cobertas em unit:** divisão em centavos, saldo com quitações e simplificação são exercitados diretamente em `ExpenseServiceTest` (além dos feature tests HTTP equivalentes).
