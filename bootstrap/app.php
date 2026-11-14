@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Atrás de proxy com HTTPS (Render, Fly): usa X-Forwarded-Proto/Host para gerar URLs https.
+        $middleware->trustProxies(at: '*');
+
         $middleware->redirectGuestsTo(
             fn (Request $request) => $request->is('api/*') ? null : route('login'),
         );
