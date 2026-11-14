@@ -105,7 +105,8 @@ pipeline {
                     php artisan view:clear --ansi
 
                     rm -rf "$PACKAGE_DIR" && mkdir -p "$PACKAGE_DIR"
-                    PACKAGE="$PACKAGE_DIR/artel-${BUILD_NUMBER}-${GIT_COMMIT:0:8}.tar.gz"
+                    SHORT_SHA="$(printf '%s' "$GIT_COMMIT" | cut -c1-8)"
+                    PACKAGE="$PACKAGE_DIR/artel-${BUILD_NUMBER}-${SHORT_SHA}.tar.gz"
 
                     tar -czf "$PACKAGE" \
                         --exclude='*.log' \
