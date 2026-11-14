@@ -17,6 +17,36 @@ Principais capacidades implementadas:
 
 O nome **Artel** (do russo *арте́ль*) inspira-se nas históricas associações cooperativas voluntárias do Leste Europeu, nas quais artesãos, trabalhadores ou viajantes se uniam para executar empreitadas em conjunto, compartilhando custos, recursos e responsabilidades de maneira solidária, transparente e igualitária — princípio que reflete diretamente a proposta do projeto para a gestão coletiva de despesas.
 
+## Requisitos do Sistema
+
+### Requisitos Funcionais (RF)
+
+| Código | Requisito | Descrição |
+|---|---|---|
+| **RF01** | **Autenticação e controle de acesso** | Permitir o cadastro, login e logout de usuários (via tokens Laravel Sanctum na API e sessão nas telas web), restringindo o acesso aos recursos de cada grupo apenas ao dono e aos seus participantes (`GroupPolicy`). |
+| **RF02** | **Gerenciamento de grupos** | Permitir criar, listar, visualizar detalhes, atualizar o nome e excluir grupos de despesas, sendo a renomeação e a exclusão exclusivas do proprietário do grupo. |
+| **RF03** | **Inclusão automática do criador** | Vincular automaticamente o usuário criador como proprietário (`user_id`) e participante inicial do grupo no momento de sua criação. |
+| **RF04** | **Gestão de participantes do grupo** | Permitir listar, adicionar (por `email` ou `user_id`) e remover participantes do grupo, bloqueando a remoção do criador ou de membros que possuam saldo pendente ou despesas ativas como pagador. |
+| **RF05** | **Registro de despesas** | Permitir o lançamento de despesas em um grupo informando descrição (`description`), valor total (`amount`), membro pagador (`paid_by`) e modalidade de divisão (`split_type`). |
+| **RF06** | **Divisão igualitária e customizada** | Suportar o rateio de despesas em três modalidades (`SplitType`): **igualitária (`equal`)** entre todos ou um subconjunto de membros, por **valores exatos (`exact`)** ou por **percentuais (`percentage`)**, distribuindo centavos residuais para que a soma das parcelas feche exatamente com o valor da despesa. |
+| **RF07** | **Histórico, edição e exclusão de despesas** | Permitir listar o histórico de despesas do grupo, consultar os detalhes e parcelas de um lançamento, editar integralmente uma despesa (recalculando suas parcelas) e excluí-la. |
+| **RF08** | **Cálculo automático de saldos** | Apurar automaticamente para cada participante o total pago (`total_paid`), o total devido (`total_owed`), o saldo líquido (`net_balance`, considerando quitações) e o status financeiro (`a_receber`, `a_pagar` ou `quitado`). |
+| **RF09** | **Simplificação de dívidas** | Calcular e sugerir uma lista enxuta de transferências (`suggested_transfers`) que minimize o número total de pagamentos entre devedores e credores para zerar os saldos do grupo. |
+| **RF10** | **Registro e histórico de quitações** | Permitir marcar dívidas como quitadas (total ou parcialmente) entre dois participantes do grupo (`settlements`), listando o histórico de acertos e abatendo automaticamente os valores no cálculo de saldo. |
+
+### Requisitos Não Funcionais (RNF)
+
+| Código | Categoria | Especificação Técnica |
+|---|---|---|
+| **RNF01** | **Arquitetura e Manutenibilidade** | Aplicação estruturada em monorepo **Laravel 13 (PHP 8.4+)** com separação de responsabilidades em camadas (*Controllers, Form Requests, Services, Strategies/Enums, Policies e Eloquent Models*) e interface web em **Blade + Tailwind CSS (Vite)**. |
+| **RNF02** | **Precisão Monetária e Transações (ACID)** | Cálculos de rateio e simplificação de dívidas processados em **centavos inteiros** para eliminar erros de ponto flutuante; escritas críticas encapsuladas em transações atômicas (`DB::transaction`) e integridade referencial com exclusão em cascata (`cascadeOnDelete`). |
+| **RNF03** | **Segurança e Validação** | Senhas armazenadas com hash seguro (`bcrypt`), autenticação via tokens **Laravel Sanctum** com proteção contra força bruta (*rate limiting*), autorização em nível de rota/request (`GroupPolicy`), validação estrita via *Form Requests* e verificação de vulnerabilidades com `composer audit`. |
+| **RNF04** | **Padronização e Análise Estática** | Conformidade obrigatória com o padrão de código PSR-12 / Laravel verificada pelo **Laravel Pint** (`make lint`) e análise estática de tipos com **Larastan / PHPStan** (`make analyse`). |
+| **RNF05** | **Testabilidade e Confiabilidade** | Suíte automatizada de testes **Unitários e de Feature** com **PHPUnit 12** e **Mockery**, executada em banco **SQLite em memória (`:memory:`)** isolado e com geração de métricas de cobertura via **PCOV**. |
+| **RNF06** | **Portabilidade e Containerização** | Ambiente de execução reprodutível empacotado com **Docker** e **Docker Compose** (`Dockerfile`, `compose.yml` e entrypoint automatizado de migrações), além de automação de desenvolvimento local via **GNU Make** (`Makefile`). |
+| **RNF07** | **Integração e Entrega Contínua (CI/CD)** | Pipeline declarativa no **Jenkins** (`Jenkinsfile`) com estágios bloqueantes de *Build*, *Quality* (Pint, Larastan e Audit), *Testes e Cobertura* (JUnit + Cobertura XML/HTML), *Package* (`.tar.gz` + `sha256`) e *Deploy + Smoke Test* automático no **Fly.io** na branch `main`. |
+| **RNF08** | **Usabilidade, Padronização REST e Documentação** | API RESTful com respostas padronizadas em JSON (`401`, `403`, `404`, `422`) e mensagens de validação em português (PT-BR), acompanhada de portal de documentação técnica em **MkDocs Material** (`mkdocs build --strict`). |
+
 ## Gestão Ágil
 
 O desenvolvimento do projeto segue práticas de **Gestão Ágil** apoiadas por um quadro **Kanban** centralizado no GitHub Projects da organização, garantindo rastreabilidade entre histórias de usuário, tarefas técnicas, branches e Pull Requests:
