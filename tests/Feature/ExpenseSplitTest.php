@@ -181,6 +181,15 @@ class ExpenseSplitTest extends TestCase
         $this->assertDatabaseCount('expenses', 0);
     }
 
+    public function test_pagador_fora_do_grupo_retorna_422(): void
+    {
+        $this->storeExpense(['paid_by' => $this->outsider->id])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['paid_by']);
+
+        $this->assertDatabaseCount('expenses', 0);
+    }
+
     public function test_participante_fora_do_grupo_retorna_422_no_modo_equal(): void
     {
         $this->storeExpense(['participants' => [$this->joao->id, $this->outsider->id]])

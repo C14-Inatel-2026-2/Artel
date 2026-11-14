@@ -6,6 +6,7 @@ use App\Enums\SplitType;
 use App\Models\Group;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreExpenseRequest extends FormRequest
 {
@@ -65,9 +66,9 @@ class StoreExpenseRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator): void
+    public function withValidator(Validator $validator): void
     {
-        $validator->after(function ($validator) {
+        $validator->after(function (Validator $validator) {
             $group = $this->group();
 
             if ($group === null) {
@@ -76,23 +77,9 @@ class StoreExpenseRequest extends FormRequest
 
             $memberIds = $group->members()->pluck('users.id')->all();
 
-            if ($this->filled('paid_by') && ! in_array((int) $this->paid_by, $memberIds, true)) {
-                $validator->errors()->add('paid_by', 'O pagador deve ser um participante do grupo.');
-            }
-
-            foreach ((array) $this->input('participants', []) as $index => $userId) {
-                if (is_numeric($userId) && ! in_array((int) $userId, $memberIds, true)) {
-                    $validator->errors()->add("participants.$index", 'O participante deve pertencer ao grupo.');
-                }
-            }
-
-            foreach ((array) $this->input('splits', []) as $index => $split) {
-                $userId = is_array($split) ? ($split['user_id'] ?? null) : null;
-
-                if (is_numeric($userId) && ! in_array((int) $userId, $memberIds, true)) {
-                    $validator->errors()->add("splits.$index.user_id", 'O usuário da parcela deve pertencer ao grupo.');
-                }
-            }
+            $this->validatePaidByIsMember($validator, $memberIds);
+            $this->validateParticipantsAreMembers($validator, $memberIds);
+            $this->validateSplitUsersAreMembers($validator, $memberIds);
         });
     }
 
@@ -101,5 +88,74 @@ class StoreExpenseRequest extends FormRequest
         $group = $this->route('group');
 
         return $group instanceof Group ? $group : null;
+    }
+
+    /**
+     * @param  list<int>  $memberIds
+     */
+    private function validatePaidByIsMember(Validator $validator, array $memberIds): void
+    {
+        if (! $this->filled('paid_by')) {
+            return;
+        }
+
+        $this->rejectUnlessMember(
+            $validator,
+            'paid_by',
+            $this->input('paid_by'),
+            $memberIds,
+            'O pagador deve ser um participante do grupo.',
+        );
+    }
+
+    /**
+     * @param  list<int>  $memberIds
+     */
+    private function validateParticipantsAreMembers(Validator $validator, array $memberIds): void
+    {
+        foreach ((array) $this->input('participants', []) as $index => $userId) {
+            $this->rejectUnlessMember(
+                $validator,
+                "participants.$index",
+                $userId,
+                $memberIds,
+                'O participante deve pertencer ao grupo.',
+            );
+        }
+    }
+
+    /**
+     * @param  list<int>  $memberIds
+     */
+    private function validateSplitUsersAreMembers(Validator $validator, array $memberIds): void
+    {
+        foreach ((array) $this->input('splits', []) as $index => $split) {
+            $userId = is_array($split) ? ($split['user_id'] ?? null) : null;
+
+            $this->rejectUnlessMember(
+                $validator,
+                "splits.$index.user_id",
+                $userId,
+                $memberIds,
+                'O usuário da parcela deve pertencer ao grupo.',
+            );
+        }
+    }
+
+    /**
+     * @param  list<int>  $memberIds
+     */
+    private function rejectUnlessMember(
+        Validator $validator,
+        string $attribute,
+        mixed $userId,
+        array $memberIds,
+        string $message,
+    ): void {
+        if (! is_numeric($userId) || in_array((int) $userId, $memberIds, true)) {
+            return;
+        }
+
+        $validator->errors()->add($attribute, $message);
     }
 }

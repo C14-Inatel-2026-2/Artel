@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Group;
 use App\Models\User;
 use App\Services\ExpenseService;
+use App\Services\GroupBalanceService;
 use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,16 +44,16 @@ class ExpenseBalanceTest extends TestCase
 
     public function test_saldo_reune_pago_devido_estado_e_totais_do_grupo(): void
     {
-        $service = app(ExpenseService::class);
+        $expenses = app(ExpenseService::class);
 
-        $service->createExpense($this->group, [
+        $expenses->createExpense($this->group, [
             'description' => 'Jantar',
             'amount' => 80,
             'paid_by' => $this->joao->id,
             'participants' => [$this->joao->id, $this->maria->id, $this->pedro->id, $this->ana->id],
         ]);
 
-        $service->createExpense($this->group, [
+        $expenses->createExpense($this->group, [
             'description' => 'Táxi',
             'amount' => 60,
             'paid_by' => $this->maria->id,
@@ -70,7 +71,7 @@ class ExpenseBalanceTest extends TestCase
             'amount' => 20,
         ]);
 
-        $balance = $service->calculateBalance($this->group);
+        $balance = app(GroupBalanceService::class)->calculateBalance($this->group);
 
         $this->assertSame($this->group->id, $balance['group_id']);
         $this->assertSame('Viagem', $balance['group_name']);
@@ -106,9 +107,7 @@ class ExpenseBalanceTest extends TestCase
 
     public function test_saldo_zerado_fica_quitado(): void
     {
-        $service = app(ExpenseService::class);
-
-        $service->createExpense($this->group, [
+        app(ExpenseService::class)->createExpense($this->group, [
             'description' => 'Almoço',
             'amount' => 40,
             'paid_by' => $this->joao->id,
@@ -121,7 +120,7 @@ class ExpenseBalanceTest extends TestCase
             'amount' => 20,
         ]);
 
-        $balance = $service->calculateBalance($this->group);
+        $balance = app(GroupBalanceService::class)->calculateBalance($this->group);
 
         $this->assertSame('quitado', $this->balanceOf($balance, $this->joao)['status']);
         $this->assertSame('quitado', $this->balanceOf($balance, $this->maria)['status']);
@@ -131,7 +130,7 @@ class ExpenseBalanceTest extends TestCase
 
     public function test_grupo_sem_despesas_tem_totais_zerados_e_todos_quitados(): void
     {
-        $balance = app(ExpenseService::class)->calculateBalance($this->group);
+        $balance = app(GroupBalanceService::class)->calculateBalance($this->group);
 
         $this->assertSame(0.0, $balance['total_expenses']);
         $this->assertSame(0, $balance['expenses_count']);
@@ -141,16 +140,14 @@ class ExpenseBalanceTest extends TestCase
 
     public function test_sugestoes_de_pagamento_acompanham_os_saldos(): void
     {
-        $service = app(ExpenseService::class);
-
-        $service->createExpense($this->group, [
+        app(ExpenseService::class)->createExpense($this->group, [
             'description' => 'Hotel',
             'amount' => 100,
             'paid_by' => $this->joao->id,
             'participants' => [$this->joao->id, $this->maria->id],
         ]);
 
-        $transfers = $service->calculateBalance($this->group)['suggested_transfers'];
+        $transfers = app(GroupBalanceService::class)->calculateBalance($this->group)['suggested_transfers'];
 
         $this->assertCount(1, $transfers);
         $this->assertSame($this->maria->id, $transfers[0]['from']['id']);
