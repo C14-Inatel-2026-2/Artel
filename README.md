@@ -1,6 +1,50 @@
 # Artel
 
-Aplicação de divisão de despesas em grupo — projeto acadêmico de Engenharia de Software (Inatel).
+Aplicação de divisão de despesas em grupo — projeto acadêmico da disciplina **C14 — Engenharia de Software** do **Instituto Nacional de Telecomunicações (Inatel)**.
+
+## Sobre o Projeto
+
+O **Artel** é uma aplicação web e API REST voltada para o gerenciamento e a **divisão justa de despesas compartilhadas** em grupos — como viagens, repúblicas estudantis, churrascos e eventos entre amigos. O sistema elimina planilhas manuais e cálculos confusos ao centralizar o histórico de gastos, automatizar o rateio e reduzir o número de pagamentos necessários para acertar as contas.
+
+Principais capacidades implementadas:
+
+- **Grupos e participantes:** criação e gestão de grupos de despesas, inclusão e remoção segura de membros (impedindo a remoção do criador ou de participantes com pendências financeiras), com autenticação via Laravel Sanctum e controle de acesso por grupo (`GroupPolicy`).
+- **Rateio flexível com precisão em centavos:** registro e edição de despesas com divisão **igualitária** (entre todos ou um subconjunto de participantes), por **valores exatos** ou por **percentuais**, tratando centavos residuais sem perdas de arredondamento.
+- **Balanço e quitações:** apuração automática do total pago, total devido e saldo líquido de cada integrante (`a_receber`, `a_pagar` ou `quitado`), com registro e histórico de acertos parciais ou totais entre membros.
+- **Simplificação de dívidas:** algoritmo que analisa os saldos líquidos do grupo e sugere o **número mínimo de transferências (PIX)** necessárias para quitar todas as pendências.
+
+### Origem do termo *Artel*
+
+O nome **Artel** (do russo *арте́ль*) inspira-se nas históricas associações cooperativas voluntárias do Leste Europeu, nas quais artesãos, trabalhadores ou viajantes se uniam para executar empreitadas em conjunto, compartilhando custos, recursos e responsabilidades de maneira solidária, transparente e igualitária — princípio que reflete diretamente a proposta do projeto para a gestão coletiva de despesas.
+
+## Gestão Ágil
+
+O desenvolvimento do projeto segue práticas de **Gestão Ágil** apoiadas por um quadro **Kanban** centralizado no GitHub Projects da organização, garantindo rastreabilidade entre histórias de usuário, tarefas técnicas, branches e Pull Requests:
+
+- **Quadro Kanban do Projeto:** [kanban - artel (view)](https://github.com/orgs/C14-Inatel-2026-2/projects/8/views/1)
+
+### Fluxo de trabalho do grupo
+
+```mermaid
+flowchart LR
+    B["Backlog / To Do"] --> P["In Progress (Branch dedicada)"]
+    P --> R["In Review (Pull Request + CI)"]
+    R --> D["Done (Merge na dev / main)"]
+```
+
+1. **Planejamento e Backlog:** As entregas são decompostas em *User Stories* (`US01` a `US09`) e *Tasks* técnicas numeradas nas Issues do repositório, especificando objetivo, critérios de aceite e checklist técnico.
+2. **Desenvolvimento em Branches Isoladas:** Cada integrante assume um card no Kanban, move-o para andamento e desenvolve em uma branch dedicada a partir da `dev` (`feat/*`, `refactor/*`, `test/*`, `ci/*`, `documentation/*`).
+3. **Code Review e Qualidade (Definition of Done):** Ao concluir a tarefa, é aberto um *Pull Request* vinculado à issue correspondente. O card só avança para concluído após revisão por pares da equipe e aprovação nas verificações de qualidade (`make lint` com Laravel Pint, `make analyse` com Larastan, `make audit` com Composer Audit e suíte automatizada com `make test`).
+4. **Integração e Entrega Contínua:** As alterações consolidadas na `dev` são promovidas para a `main`, disparando a pipeline do Jenkins para build, testes, empacotamento e deploy automático no Fly.io.
+
+## Integrantes
+
+| Nome Completo | GitHub |
+|---|---|
+| Davi Marcondes Ferreira | [@Davizin06](https://github.com/Davizin06) |
+| João Carlos de Oliveira Mexias | [@Jhoncy6](https://github.com/Jhoncy6) |
+| Millene Silva Toledo | [@pudimih](https://github.com/pudimih) |
+| Vinicius Sávio Medina | [@Psychovv](https://github.com/Psychovv) |
 
 ## Demo
 
