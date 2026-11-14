@@ -80,6 +80,20 @@ Os builds #1 a #5, em vermelho, são as falhas encontradas e corrigidas na pipel
 
 2. No Jenkins: **Manage Jenkins → Credentials → Add**, tipo **Secret text**, ID **`fly-api-token`** (exato), com o token como valor.
 
+## Deploy no Render (alternativa gratuita)
+
+O repositório inclui um [`render.yaml`](https://github.com/C14-Inatel-2026-2/Artel/blob/main/render.yaml) (Blueprint) com o app em Docker e um Postgres, ambos no plano gratuito. O app usa Postgres no Render (`DB_CONNECTION=pgsql`) porque o disco do plano gratuito é efêmero e apagaria o SQLite a cada reinício.
+
+1. Crie uma conta em [render.com](https://render.com) e conecte o GitHub.
+2. **New → Blueprint**, selecione o repositório e a branch `main`.
+3. Confirme os recursos `artel` (web) e `artel-db` (Postgres) e clique em **Apply**.
+4. Aguarde o build. A URL fica no formato `https://artel.onrender.com`. Teste com `GET /up`.
+
+!!! warning "Limites do plano gratuito"
+    - O serviço **dorme após 15 minutos sem acesso**; a primeira requisição leva de 30 a 60 segundos. Abra o app alguns minutos antes de uma apresentação.
+    - O Postgres gratuito **expira 30 dias após a criação**, e só pode existir um por conta.
+    - O disco do serviço é efêmero. Dados ficam apenas no Postgres.
+
 ## Deploy no Fly.io
 
 A demo fica em **https://artel-c14.fly.dev** (região `gru`). Health check: `GET /up`.

@@ -1,0 +1,31 @@
+# Blueprint do Render para o Artel (Laravel + Postgres), plano gratuito.
+# Uso: Render → New → Blueprint → selecione este repositório e a branch.
+# Atenção: o Postgres gratuito expira 30 dias após a criação.
+services:
+  - type: web
+    name: artel
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: artel-db
+          property: connectionString
+
+databases:
+  - name: artel-db
+    plan: free
+    region: oregon
+    databaseName: artel
+    user: artel
