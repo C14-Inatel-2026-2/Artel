@@ -28,6 +28,52 @@ O servidor local é descrito em [`ci/jenkins/README.md`](https://github.com/C14-
 !!! note "Sem status no GitHub"
     O Jenkins roda localmente e não reporta o resultado aos commits e PRs. Os builds precisam ser disparados no servidor da equipe.
 
+### Subir o Jenkins local
+
+Pré-requisito: Docker e Docker Compose.
+
+1. Suba o servidor a partir da raiz do repositório:
+
+    ```bash
+    docker compose -f ci/jenkins/compose.yml up -d
+    ```
+
+2. Abra [http://localhost:8080](http://localhost:8080) e obtenha a senha inicial:
+
+    ```bash
+    docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+    ```
+
+3. No assistente inicial, escolha **Install suggested plugins** e crie o usuário administrador.
+4. Em **Manage Jenkins → Plugins**, confirme os plugins **Pipeline**, **Git**, **JUnit**, **Coverage** e **Credentials Binding**.
+5. Garanta as ferramentas no agente que executa o job (`agent any`: por padrão, o próprio controller). A imagem `jenkins/jenkins:lts` não traz PHP 8.4 (`pdo_sqlite`, `mbstring`, `dom`, `xml`), Composer, `curl` nem PCOV/Xdebug, então instale esses itens no container ou configure um agente que já os tenha.
+6. Cadastre a credencial `fly-api-token` (veja [Credencial do Fly](#credencial-do-fly)). Ela só é necessária para o deploy na `main`.
+
+### Criar o job apontando para o repositório
+
+1. **New Item → Multibranch Pipeline** (ou **Pipeline**, se for rodar só uma branch), com o nome `artel`.
+2. Em **Branch Sources → Git**, informe `https://github.com/C14-Inatel-2026-2/Artel.git`.
+3. Em **Build Configuration**, mantenha **by Jenkinsfile** com o caminho `Jenkinsfile`.
+4. Salve e use **Scan Multibranch Pipeline Now** (ou **Build Now**). Sem webhook, os builds precisam ser disparados manualmente.
+5. Acompanhe pela visão **Stage View** ou **Open Blue Ocean / Pipeline Overview**. O build da `main` executa os cinco estágios. As demais branches terminam no *Package*.
+
+Os relatórios ficam em **Artifacts** do build (`build/reports/`, `build/package/`), e as abas **Tests** e **Coverage** mostram o JUnit e a cobertura.
+
+### Evidências
+
+Capturas de um build verde da `main` no Jenkins da equipe.
+
+<!-- EVIDENCIAS: copie os prints para docs/img/ci/ com os nomes abaixo e troque este comentário pelas imagens.
+
+![Stages verdes: Build, Quality, Testes e Cobertura, Package e Deploy e Smoke Test](img/ci/stage-view.png)
+![Resultados JUnit](img/ci/junit.png)
+![Relatório de cobertura](img/ci/cobertura.png)
+![Log do Deploy e Smoke Test com HTTP 200](img/ci/deploy-smoke-test.png)
+-->
+
+!!! warning "Pendente"
+    Os prints ainda precisam ser capturados no Jenkins da equipe e adicionados em `docs/img/ci/`.
+
 ### Credencial do Fly
 
 1. Gere um token de deploy:
