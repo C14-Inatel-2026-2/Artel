@@ -17,12 +17,14 @@ RUN apt-get update \
     && apt-get install -y \
         git \
         libonig-dev \
+        libpq-dev \
         libsqlite3-dev \
         libzip-dev \
         unzip \
     && docker-php-ext-install \
         bcmath \
         mbstring \
+        pdo_pgsql \
         pdo_sqlite \
         zip \
     && a2enmod rewrite \
