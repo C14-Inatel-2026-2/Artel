@@ -30,6 +30,14 @@ class GroupBalanceService
         ];
     }
 
+    /**
+     * Saldo líquido de um participante no grupo (considera despesas e quitações).
+     */
+    public function netBalanceForMember(Group $group, User $member): float
+    {
+        return $this->memberBalance($group, $member)['net_balance'];
+    }
+
     private function memberBalance(Group $group, User $member): array
     {
         $totalPaid = (float) $group->expenses()->where('paid_by', $member->id)->sum('amount');
