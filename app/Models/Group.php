@@ -53,6 +53,8 @@ class Group extends Model
 
     /**
      * Quitações (acertos) registradas no grupo.
+     *
+     * @return HasMany<Settlement, $this>
      */
     public function settlements(): HasMany
     {

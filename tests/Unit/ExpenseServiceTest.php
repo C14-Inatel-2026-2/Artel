@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\Group;
 use App\Models\User;
 use App\Services\ExpenseService;
+use App\Services\GroupBalanceService;
 use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
@@ -223,7 +224,7 @@ class ExpenseServiceTest extends TestCase
             'participants' => [$this->joao->id, $this->maria->id],
         ]);
 
-        $before = $this->service->calculateBalance($this->group);
+        $before = app(GroupBalanceService::class)->calculateBalance($this->group);
 
         $this->assertSame(50.0, $this->balanceOf($before, $this->joao)['net_balance']);
         $this->assertSame(-50.0, $this->balanceOf($before, $this->maria)['net_balance']);
@@ -236,7 +237,7 @@ class ExpenseServiceTest extends TestCase
             'amount' => 20,
         ]);
 
-        $partial = $this->service->calculateBalance($this->group);
+        $partial = app(GroupBalanceService::class)->calculateBalance($this->group);
         $joao = $this->balanceOf($partial, $this->joao);
         $maria = $this->balanceOf($partial, $this->maria);
 
@@ -254,7 +255,7 @@ class ExpenseServiceTest extends TestCase
             'amount' => 30,
         ]);
 
-        $after = $this->service->calculateBalance($this->group);
+        $after = app(GroupBalanceService::class)->calculateBalance($this->group);
 
         $this->assertSame(0.0, $this->balanceOf($after, $this->joao)['net_balance']);
         $this->assertSame(0.0, $this->balanceOf($after, $this->maria)['net_balance']);
@@ -279,7 +280,7 @@ class ExpenseServiceTest extends TestCase
             'participants' => [$this->pedro->id, $this->ana->id],
         ]);
 
-        $balance = $this->service->calculateBalance($this->group);
+        $balance = app(GroupBalanceService::class)->calculateBalance($this->group);
 
         $this->assertSame(50.0, $this->balanceOf($balance, $this->joao)['net_balance']);
         $this->assertSame(-50.0, $this->balanceOf($balance, $this->maria)['net_balance']);

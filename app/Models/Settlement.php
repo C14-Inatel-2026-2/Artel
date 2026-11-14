@@ -22,6 +22,8 @@ class Settlement extends Model
 
     /**
      * Grupo do acerto.
+     *
+     * @return BelongsTo<Group, $this>
      */
     public function group(): BelongsTo
     {
@@ -30,6 +32,8 @@ class Settlement extends Model
 
     /**
      * Usuário que pagou o acerto (quitou a dívida).
+     *
+     * @return BelongsTo<User, $this>
      */
     public function payer(): BelongsTo
     {
@@ -38,6 +42,8 @@ class Settlement extends Model
 
     /**
      * Usuário que recebeu o acerto.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function payee(): BelongsTo
     {

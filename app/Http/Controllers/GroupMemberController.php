@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AddGroupMemberRequest;
 use App\Models\Group;
 use App\Models\User;
-use App\Services\ExpenseService;
+use App\Services\GroupBalanceService;
 use Illuminate\Http\JsonResponse;
 
 class GroupMemberController extends Controller
 {
     public function __construct(
-        protected ExpenseService $expenseService
+        protected GroupBalanceService $groupBalanceService
     ) {}
 
     /**
@@ -77,7 +77,7 @@ class GroupMemberController extends Controller
             ], 404);
         }
 
-        if ($this->expenseService->netBalanceForMember($group, $user) !== 0.0) {
+        if ($this->groupBalanceService->netBalanceForMember($group, $user) !== 0.0) {
             return response()->json([
                 'message' => 'Não é possível remover o participante enquanto houver saldo pendente.',
             ], 422);

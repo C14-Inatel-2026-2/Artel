@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGroupRequest;
 use App\Models\Expense;
 use App\Models\Group;
-use App\Services\ExpenseService;
+use App\Services\GroupBalanceService;
 use App\Services\SettlementService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +17,7 @@ use Illuminate\View\View;
 class GroupPageController extends Controller
 {
     public function __construct(
-        protected ExpenseService $expenseService,
+        protected GroupBalanceService $groupBalanceService,
         protected SettlementService $settlementService,
     ) {}
 
@@ -67,7 +67,7 @@ class GroupPageController extends Controller
             ->latest('id')
             ->get();
 
-        $balance = $this->expenseService->calculateBalance($group);
+        $balance = $this->groupBalanceService->calculateBalance($group);
 
         $myBalance = collect($balance['balances'])
             ->firstWhere('user.id', $request->user()->id)['net_balance'] ?? 0.0;
