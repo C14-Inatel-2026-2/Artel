@@ -98,7 +98,8 @@ pipeline {
                     APP_ENV=production APP_DEBUG=false php artisan config:cache --ansi
                     APP_ENV=production APP_DEBUG=false php artisan route:cache --ansi
                     APP_ENV=production APP_DEBUG=false php artisan view:cache --ansi
-                    php artisan optimize:clear --ansi
+                    # CACHE_STORE=array: em agente limpo não existe database.sqlite para o cache em banco.
+                    CACHE_STORE=array php artisan optimize:clear --ansi
 
                     rm -rf "$PACKAGE_DIR" && mkdir -p "$PACKAGE_DIR"
                     PACKAGE="$PACKAGE_DIR/artel-${BUILD_NUMBER}-${GIT_COMMIT:0:8}.tar.gz"
