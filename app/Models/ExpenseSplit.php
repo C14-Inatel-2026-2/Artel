@@ -11,6 +11,8 @@ class ExpenseSplit extends Model
 
     /**
      * Despesa à qual esta divisão pertence.
+     *
+     * @return BelongsTo<Expense, $this>
      */
     public function expense(): BelongsTo
     {
@@ -19,6 +21,8 @@ class ExpenseSplit extends Model
 
     /**
      * Usuário que deve este valor.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {

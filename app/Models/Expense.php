@@ -12,6 +12,8 @@ class Expense extends Model
 
     /**
      * Usuário que pagou a despesa.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function payer(): BelongsTo
     {
@@ -20,6 +22,8 @@ class Expense extends Model
 
     /**
      * Grupo da despesa.
+     *
+     * @return BelongsTo<Group, $this>
      */
     public function group(): BelongsTo
     {
@@ -28,6 +32,8 @@ class Expense extends Model
 
     /**
      * Divisões da despesa.
+     *
+     * @return HasMany<ExpenseSplit, $this>
      */
     public function splits(): HasMany
     {

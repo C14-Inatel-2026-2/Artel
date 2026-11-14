@@ -36,12 +36,13 @@ pipeline {
             }
         }
 
-        // Verifica formatação (Laravel Pint) e vulnerabilidades de dependências (Composer Audit).
+        // Verifica formatação (Laravel Pint), tipagem (Larastan) e vulnerabilidades (Composer Audit).
         // Qualquer exit code != 0 falha o stage e impede o avanço da pipeline.
         stage('Quality') {
             steps {
                 sh '''
                     ./vendor/bin/pint --test
+                    ./vendor/bin/phpstan analyse --no-progress
                     composer audit --no-interaction
                 '''
             }
@@ -97,10 +98,15 @@ pipeline {
                     APP_ENV=production APP_DEBUG=false php artisan config:cache --ansi
                     APP_ENV=production APP_DEBUG=false php artisan route:cache --ansi
                     APP_ENV=production APP_DEBUG=false php artisan view:cache --ansi
-                    php artisan optimize:clear --ansi
+                    # Limpa só config/rotas/views: o optimize:clear também limpa o cache em banco,
+                    # e em agente limpo o database.sqlite não existe.
+                    php artisan config:clear --ansi
+                    php artisan route:clear --ansi
+                    php artisan view:clear --ansi
 
                     rm -rf "$PACKAGE_DIR" && mkdir -p "$PACKAGE_DIR"
-                    PACKAGE="$PACKAGE_DIR/artel-${BUILD_NUMBER}-${GIT_COMMIT:0:8}.tar.gz"
+                    SHORT_SHA="$(printf '%s' "$GIT_COMMIT" | cut -c1-8)"
+                    PACKAGE="$PACKAGE_DIR/artel-${BUILD_NUMBER}-${SHORT_SHA}.tar.gz"
 
                     tar -czf "$PACKAGE" \
                         --exclude='*.log' \

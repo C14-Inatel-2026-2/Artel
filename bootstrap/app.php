@@ -16,8 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(
-            fn (Request $request) => $request->is('api/*') ? null : '/',
+            fn (Request $request) => $request->is('api/*') ? null : route('login'),
         );
+
+        $middleware->redirectUsersTo(fn () => route('web.groups.index'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

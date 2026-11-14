@@ -14,16 +14,6 @@
     @stack('styles')
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased flex flex-col">
-    <header class="border-b border-slate-200 bg-white">
-        <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-            <a href="{{ url('/') }}" class="text-xl font-semibold text-indigo-600">Artel</a>
-
-            <nav class="flex items-center gap-4 text-sm">
-                @yield('nav')
-            </nav>
-        </div>
-    </header>
-
     <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
         @yield('content')
     </main>

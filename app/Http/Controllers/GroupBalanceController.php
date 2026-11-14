@@ -3,20 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
-use App\Services\ExpenseService;
+use App\Services\GroupBalanceService;
 use Illuminate\Http\JsonResponse;
 
 class GroupBalanceController extends Controller
 {
     public function __construct(
-        protected ExpenseService $expenseService
+        protected GroupBalanceService $groupBalanceService
     ) {}
 
     public function index(Group $group): JsonResponse
     {
         $this->authorize('view', $group);
 
-        $balances = $this->expenseService->calculateBalance($group);
+        $balances = $this->groupBalanceService->calculateBalance($group);
 
         return response()->json($balances, 200);
     }

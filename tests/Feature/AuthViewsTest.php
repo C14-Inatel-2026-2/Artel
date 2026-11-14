@@ -112,7 +112,8 @@ class AuthViewsTest extends TestCase
         $tokenAntes = session()->token();
 
         $this->post('/user/login', ['email' => $user->email, 'password' => 'senha-segura-123'])
-            ->assertRedirect('/');
+            ->assertRedirect('/groups')
+            ->assertSessionHas('status', 'Login realizado com sucesso.');
 
         $this->assertAuthenticatedAs($user);
         $this->assertNotSame($idAntes, session()->getId());
@@ -123,9 +124,96 @@ class AuthViewsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/login')->assertRedirect('/');
-        $this->actingAs($user)->get('/register')->assertRedirect('/');
-        $this->actingAs($user)->post('/user/login', [])->assertRedirect('/');
-        $this->actingAs($user)->post('/user/register', [])->assertRedirect('/');
+        $this->actingAs($user)->get('/login')->assertRedirect('/groups');
+        $this->actingAs($user)->get('/register')->assertRedirect('/groups');
+        $this->actingAs($user)->post('/user/login', [])->assertRedirect('/groups');
+        $this->actingAs($user)->post('/user/register', [])->assertRedirect('/groups');
+    }
+
+    public function test_raiz_manda_o_logado_para_os_grupos_e_o_visitante_para_o_login(): void
+    {
+        $this->get('/')->assertRedirect('/login');
+
+        $this->actingAs(User::factory()->create())->get('/')->assertRedirect('/groups');
+    }
+
+    public function test_aviso_do_cadastro_chega_ao_login_sem_passar_pela_raiz(): void
+    {
+        $this->post('/user/register', [
+            'name' => 'Ana Teste',
+            'email' => 'ana@example.com',
+            'password' => 'senha-segura-123',
+            'password_confirmation' => 'senha-segura-123',
+        ])->assertRedirect('/login');
+
+        $this->followingRedirects()
+            ->post('/user/register', [
+                'name' => 'Bruno Teste',
+                'email' => 'bruno@example.com',
+                'password' => 'senha-segura-123',
+                'password_confirmation' => 'senha-segura-123',
+            ])
+            ->assertSee('Conta criada. Entre para continuar.');
+    }
+
+    public function test_sair_encerra_a_sessao_e_volta_ao_login_com_aviso(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/logout')
+            ->assertRedirect('/login')
+            ->assertSessionHas('status', 'Você saiu da sua conta.');
+
+        $this->assertGuest();
+
+        $this->get('/groups')->assertRedirect('/login');
+    }
+
+    public function test_sair_regenera_a_sessao_e_o_token_csrf(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->startSession();
+        $idAntes = session()->getId();
+        $tokenAntes = session()->token();
+
+        $this->post('/logout');
+
+        $this->assertNotSame($idAntes, session()->getId());
+        $this->assertNotSame($tokenAntes, session()->token());
+    }
+
+    public function test_visitante_nao_consegue_sair(): void
+    {
+        $this->post('/logout')->assertRedirect('/login');
+    }
+
+    public function test_logout_da_web_nao_aceita_get(): void
+    {
+        $this->actingAs(User::factory()->create())->get('/logout')->assertStatus(405);
+
+        $this->assertAuthenticated();
+    }
+
+    public function test_login_valido_mostra_o_aviso_de_sucesso_na_pagina_de_grupos(): void
+    {
+        $user = User::factory()->create(['password' => 'senha-segura-123']);
+
+        $this->followingRedirects()
+            ->post('/user/login', ['email' => $user->email, 'password' => 'senha-segura-123'])
+            ->assertSee('Meus grupos')
+            ->assertSee('Tudo certo')
+            ->assertSee('Login realizado com sucesso.')
+            ->assertSee('role="status"', false);
+    }
+
+    public function test_login_com_senha_errada_nao_mostra_aviso_de_sucesso(): void
+    {
+        $user = User::factory()->create(['password' => 'senha-segura-123']);
+
+        $this->from('/login')->followingRedirects()
+            ->post('/user/login', ['email' => $user->email, 'password' => 'errada'])
+            ->assertDontSee('Login realizado com sucesso.')
+            ->assertSee('Algo deu errado');
     }
 }
