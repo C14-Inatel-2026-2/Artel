@@ -1,9 +1,9 @@
 // Pipeline de CI/CD do Artel (Laravel 13 / PHP 8.4).
-// Fluxo: Build → Quality → Testes e Cobertura → Package → Deploy e Smoke Test.
-// Plugins usados: Pipeline, Git, JUnit, Coverage e Credentials Binding.
+// Fluxo: Build → Quality → Testes e Cobertura → Package → Smoke Test.
+// Plugins usados: Pipeline, Git, JUnit e Coverage.
 // Pré-requisitos do agente: PHP 8.4 (pdo_sqlite, mbstring, dom, xml), Composer,
 // curl, e um driver de cobertura (PCOV ou Xdebug).
-// Deploy (somente main): flyctl + credencial secreta "fly-api-token" (FLY_API_TOKEN).
+// Deploy: o Render publica sozinho a cada push na main (render.yaml). O stage final só valida GET /up.
 pipeline {
     agent any
 
@@ -16,8 +16,7 @@ pipeline {
     environment {
         REPORTS_DIR = 'build/reports'
         PACKAGE_DIR = 'build/package'
-        FLY_APP = 'artel-c14'
-        DEPLOY_URL = 'https://artel-c14.fly.dev'
+        DEPLOY_URL = 'https://artel-id7v.onrender.com'
     }
 
     stages {
@@ -128,8 +127,10 @@ pipeline {
             }
         }
 
-        // Publica no Fly.io e valida GET /up. Somente na branch main, após stages anteriores.
-        stage('Deploy e Smoke Test') {
+        // Valida GET /up na demo do Render. Somente na branch main, após stages anteriores.
+        // O Render faz o deploy sozinho a cada push na main; este stage espera o app responder
+        // (inclui o build e o cold start do plano gratuito).
+        stage('Smoke Test') {
             when {
                 anyOf {
                     branch 'main'
@@ -139,36 +140,20 @@ pipeline {
                     }
                 }
             }
-            environment {
-                FLY_API_TOKEN = credentials('fly-api-token')
-            }
             steps {
                 sh '''
                     set -eu
 
-                    if ! command -v flyctl >/dev/null 2>&1 && ! command -v fly >/dev/null 2>&1; then
-                        echo "Instalando flyctl no agente..."
-                        curl -L https://fly.io/install.sh | sh
-                        export FLYCTL_INSTALL="${HOME}/.fly"
-                        export PATH="${FLYCTL_INSTALL}/bin:${PATH}"
-                    fi
-
-                    FLY_BIN="$(command -v flyctl || command -v fly)"
-                    "$FLY_BIN" version
-
-                    echo "Publicando ${FLY_APP} a partir da main..."
-                    "$FLY_BIN" deploy --remote-only --app "$FLY_APP"
-
                     echo "Smoke test: GET ${DEPLOY_URL}/up"
                     ok=0
-                    for i in $(seq 1 18); do
-                        code="$(curl -sS -o /tmp/artel-up.body -w '%{http_code}' "${DEPLOY_URL}/up" || true)"
+                    for i in $(seq 1 30); do
+                        code="$(curl -sS -o /tmp/artel-up.body -w '%{http_code}' --max-time 30 "${DEPLOY_URL}/up" || true)"
                         echo "tentativa ${i}: HTTP ${code}"
                         if [ "$code" = "200" ]; then
                             ok=1
                             break
                         fi
-                        sleep 5
+                        sleep 10
                     done
 
                     if [ "$ok" != "1" ]; then
@@ -176,7 +161,7 @@ pipeline {
                         exit 1
                     fi
 
-                    echo "Deploy e smoke test OK (${DEPLOY_URL})"
+                    echo "Smoke test OK (${DEPLOY_URL})"
                 '''
             }
         }
