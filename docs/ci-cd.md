@@ -83,49 +83,7 @@ A demo pública roda no Render, em **https://artel-id7v.onrender.com**. O reposi
     - O Postgres gratuito **expira 30 dias após a criação**, e só pode existir um por conta.
     - O disco do serviço é efêmero. Dados ficam apenas no Postgres.
 
-## Deploy no Fly.io (alternativa)
-
-O repositório mantém a configuração do Fly.io (`fly.toml`) como alternativa ao Render. A pipeline **não** publica mais no Fly: o deploy abaixo é manual. Instância anterior: **https://artel-c14.fly.dev** (região `gru`).
-
 !!! warning "Ambiente de demonstração"
     A API pública exige login e restringe o acesso aos grupos do usuário, mas é um ambiente de demonstração. Não use dados reais nesse ambiente.
 
-### Pré-requisitos
-
-- Conta no [Fly.io](https://fly.io) e CLI `flyctl` (`curl -L https://fly.io/install.sh | sh`)
-- Login: `fly auth login`
-- App `artel-c14` e volume `artel_data` (montado em `/data`) já criados
-
-### Deploy manual
-
-Na raiz do repositório (com `fly.toml`):
-
-```bash
-fly deploy --app artel-c14
-```
-
-Secrets do app (já configurados; regenere só se necessário):
-
-```bash
-fly secrets set APP_KEY="$(php artisan key:generate --show)" APP_URL="https://artel-c14.fly.dev" --app artel-c14
-```
-
-O container sobe com [`docker/entrypoint.sh`](https://github.com/C14-Inatel-2026-2/Artel/blob/main/docker/entrypoint.sh): ajusta a porta (`PORT=8080`), garante o SQLite em `/data/database.sqlite`, roda `php artisan migrate --force` e inicia o Apache. Configuração versionada em `fly.toml` e `Dockerfile`.
-
-### Pausar entre demos
-
-Para zerar o custo de máquina:
-
-```bash
-fly scale count 0 --app artel-c14 --yes
-```
-
-A URL fica indisponível até religar. O volume `artel_data` (1 GB) continua existindo e tem um custo mínimo de armazenamento (~US$ 0,15/mês). Para eliminar esse custo, apague o volume ou o app (`fly apps destroy artel-c14`), o que também remove o SQLite da demo.
-
-Para religar:
-
-```bash
-fly deploy --app artel-c14
-```
-
-Confirme com `fly status --app artel-c14` e `curl -I https://artel-c14.fly.dev/up`.
+O container sobe com [`docker/entrypoint.sh`](https://github.com/C14-Inatel-2026-2/Artel/blob/main/docker/entrypoint.sh): ajusta a porta (`PORT`), roda `php artisan migrate --force` e inicia o Apache. Configuração versionada em `render.yaml` e `Dockerfile`.
