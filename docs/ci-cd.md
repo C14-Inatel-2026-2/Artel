@@ -61,18 +61,14 @@ Os relatórios ficam em **Artifacts** do build (`build/reports/`, `build/package
 
 ### Evidências
 
-Capturas de um build verde da `main` no Jenkins da equipe.
+Build **#6** da pipeline no Jenkins local, com todos os estágios até o *Package* verdes. Os gráficos à direita mostram os **256 testes** passando (*Test Result Trend*) e a **cobertura de linhas de 97,25%** (*Code Coverage Trend*).
 
-<!-- EVIDENCIAS: copie os prints para docs/img/ci/ com os nomes abaixo e troque este comentário pelas imagens.
+![Stage View do Jenkins: Build, Quality, Testes e Cobertura e Package verdes no build #6](img/ci/stage-view.png)
 
-![Stages verdes: Build, Quality, Testes e Cobertura, Package e Deploy e Smoke Test](img/ci/stage-view.png)
-![Resultados JUnit](img/ci/junit.png)
-![Relatório de cobertura](img/ci/cobertura.png)
-![Log do Deploy e Smoke Test com HTTP 200](img/ci/deploy-smoke-test.png)
--->
+Os builds #1 a #5, em vermelho, são as falhas encontradas e corrigidas na pipeline (formatação e tipagem no *Quality* e erros no *Package*).
 
-!!! warning "Pendente"
-    Os prints ainda precisam ser capturados no Jenkins da equipe e adicionados em `docs/img/ci/`.
+!!! note "Deploy e Smoke Test"
+    O estágio só roda na branch `main` e exige a credencial `fly-api-token`, por isso aparece vazio neste build, executado em uma branch de correção.
 
 ### Credencial do Fly
 
