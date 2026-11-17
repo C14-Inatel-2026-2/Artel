@@ -91,4 +91,4 @@ docker compose down                                  # parar
 
 ## CI/CD e deploy
 
-A pipeline Jenkins, o deploy no Fly.io e como pausar a demo estão em [CI/CD e deploy](ci-cd.md).
+A pipeline Jenkins, o deploy no Render (demo pública) e a alternativa Fly.io estão em [CI/CD e deploy](ci-cd.md).

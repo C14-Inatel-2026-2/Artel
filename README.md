@@ -44,7 +44,7 @@ O nome **Artel** (do russo *арте́ль*) inspira-se nas históricas associa�
 | **RNF04** | **Padronização e Análise Estática** | Conformidade obrigatória com o padrão de código PSR-12 / Laravel verificada pelo **Laravel Pint** (`make lint`) e análise estática de tipos com **Larastan / PHPStan** (`make analyse`). |
 | **RNF05** | **Testabilidade e Confiabilidade** | Suíte automatizada de testes **Unitários e de Feature** com **PHPUnit 12** e **Mockery**, executada em banco **SQLite em memória (`:memory:`)** isolado e com geração de métricas de cobertura via **PCOV**. |
 | **RNF06** | **Portabilidade e Containerização** | Ambiente de execução reprodutível empacotado com **Docker** e **Docker Compose** (`Dockerfile`, `compose.yml` e entrypoint automatizado de migrações), além de automação de desenvolvimento local via **GNU Make** (`Makefile`). |
-| **RNF07** | **Integração e Entrega Contínua (CI/CD)** | Pipeline declarativa no **Jenkins** (`Jenkinsfile`) com estágios bloqueantes de *Build*, *Quality* (Pint, Larastan e Audit), *Testes e Cobertura* (JUnit + Cobertura XML/HTML), *Package* (`.tar.gz` + `sha256`) e *Deploy + Smoke Test* automático no **Fly.io** na branch `main`. |
+| **RNF07** | **Integração e Entrega Contínua (CI/CD)** | Pipeline declarativa no **Jenkins** (`Jenkinsfile`) com estágios bloqueantes de *Build*, *Quality* (Pint, Larastan e Audit), *Testes e Cobertura* (JUnit + Cobertura XML/HTML), *Package* (`.tar.gz` + `sha256`) e *Smoke Test* do deploy no Render na branch `main`. A demo pública é hospedada no **Render** (Docker + Postgres, via `render.yaml`). |
 | **RNF08** | **Usabilidade, Padronização REST e Documentação** | API RESTful com respostas padronizadas em JSON (`401`, `403`, `404`, `422`) e mensagens de validação em português (PT-BR), acompanhada de portal de documentação técnica em **MkDocs Material** (`mkdocs build --strict`). |
 
 ## Gestão Ágil
@@ -65,7 +65,7 @@ flowchart LR
 1. **Planejamento e Backlog:** As entregas são decompostas em *User Stories* (`US01` a `US09`) e *Tasks* técnicas numeradas nas Issues do repositório, especificando objetivo, critérios de aceite e checklist técnico.
 2. **Desenvolvimento em Branches Isoladas:** Cada integrante assume um card no Kanban, move-o para andamento e desenvolve em uma branch dedicada a partir da `dev` (`feat/*`, `refactor/*`, `test/*`, `ci/*`, `documentation/*`).
 3. **Code Review e Qualidade (Definition of Done):** Ao concluir a tarefa, é aberto um *Pull Request* vinculado à issue correspondente. O card só avança para concluído após revisão por pares da equipe e aprovação nas verificações de qualidade (`make lint` com Laravel Pint, `make analyse` com Larastan, `make audit` com Composer Audit e suíte automatizada com `make test`).
-4. **Integração e Entrega Contínua:** As alterações consolidadas na `dev` são promovidas para a `main`, disparando a pipeline do Jenkins para build, testes, empacotamento e deploy automático no Fly.io.
+4. **Integração e Entrega Contínua:** As alterações consolidadas na `dev` são promovidas para a `main`, disparando a pipeline do Jenkins para build, testes e empacotamento. A demo é publicada no Render.
 
 ## Integrantes
 
@@ -78,13 +78,14 @@ flowchart LR
 
 ## Demo
 
-- URL: [https://artel-c14.fly.dev](https://artel-c14.fly.dev)
+- URL: [https://artel-id7v.onrender.com](https://artel-id7v.onrender.com)
+- Hospedagem: [Render](https://render.com) (Docker + Postgres, plano gratuito), definida em [`render.yaml`](render.yaml)
 - Health: `GET /up`
 - API (ex.): `POST /api/auth/login` e, com o token, `GET /api/groups`
 
 > **Atenção:** a demo é um ambiente de demonstração. Não use dados reais.
 >
-> Entre demos o app pode estar **pausado** (`fly scale count 0`) para não gerar custo de máquina. Um novo build da `main` no Jenkins volta a publicar no Fly. Veja [CI/CD e deploy](docs/ci-cd.md).
+> No plano gratuito do Render o serviço **dorme após 15 minutos sem acesso** (a primeira requisição leva de 30 a 60 s) e o Postgres gratuito **expira 30 dias após a criação**. Abra o app alguns minutos antes de uma apresentação. Veja [CI/CD e deploy](docs/ci-cd.md).
 
 ## Guia de execução
 
@@ -128,7 +129,7 @@ Outros atalhos: `make help`, `make migrate`, `make migrate-status`, `make lint-f
 
 ### CI/CD (Jenkins)
 
-Pipeline definida em [`Jenkinsfile`](Jenkinsfile): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Deploy e Smoke Test** no Fly.io.
+Pipeline definida em [`Jenkinsfile`](Jenkinsfile): **Build → Quality → Testes e Cobertura → Package** e, na `main`, **Smoke Test** da demo no Render. O deploy em si é automático no Render; veja [CI/CD e deploy](docs/ci-cd.md).
 
 - Visão geral: [CI/CD e deploy](docs/ci-cd.md)
 - Servidor local: [`ci/jenkins/`](ci/jenkins/README.md)
