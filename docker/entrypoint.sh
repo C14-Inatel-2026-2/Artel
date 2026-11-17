@@ -13,7 +13,7 @@ mkdir -p storage/framework/cache \
     storage/logs \
     bootstrap/cache
 
-# O arquivo SQLite só é necessário quando o banco é SQLite (Fly/Compose); no Render usa Postgres.
+# O arquivo SQLite só é necessário quando o banco é SQLite (Compose); no Render usa Postgres.
 if [ "$DB_CONNECTION" = "sqlite" ]; then
     mkdir -p "$DATA_DIR"
     touch "$DB_DATABASE"
@@ -22,7 +22,7 @@ fi
 
 chown -R www-data:www-data storage bootstrap/cache
 
-# Point Apache at the port Fly (or Compose) expects.
+# Point Apache at the port Render (or Compose) expects.
 sed -ri "s/^Listen .*/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -ri "s/<VirtualHost \\*:.*>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
